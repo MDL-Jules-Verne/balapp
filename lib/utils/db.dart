@@ -1,5 +1,10 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 
+import 'package:csv/csv.dart';
+import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+
+const listToCsv = ListToCsvConverter();
 class DatabaseHolder extends ChangeNotifier {
 
   /// List of lists, each representing a ticket
@@ -23,25 +28,35 @@ class DatabaseHolder extends ChangeNotifier {
   /// Index of the externe property in the lists
   late int externeIndex;
 
+  /// Where to store the db file on fs
+  String? dbPath;
 
-
-  bool isIdInDb(String id) {
-    return value.any((element) => element[idIndex] == id);
+  void writeToStorage() async {
+    dbPath ??= (await getApplicationDocumentsDirectory()).path;
+    print(listToCsv.convert(value));
+    print('$dbPath/db.csv');
+    await File('$dbPath/db.csv').writeAsString(listToCsv.convert(value));
   }
 
-  int findTicketIndex(String id){
-    return value.indexWhere((element) => element[idIndex] == id);
+  bool isIdInDb(String ticketId) {
+    return value.any((element) => element[idIndex] == ticketId);
   }
 
+  int findTicketIndex(String ticketId){
+    return value.indexWhere((element) => element[idIndex] == ticketId);
+  }
+
+  /// Adds data to an empty ticket
   void registerTicket(String id, {required String firstName, required String lastName, required bool isExternal}){
     int index = findTicketIndex(id);
     if(index == -1) return;
     value[index][nomIndex] = lastName;
     value[index][prenomIndex] = firstName;
     value[index][externeIndex] = isExternal;
-    debugPrint(value.toString());
+    writeToStorage();
   }
 
+  /// Returns if the ticket is usable and why
   TicketUsableState isUsable(String id){
     int index = findTicketIndex(id);
     if(index == -1) return TicketUsableState(false, reason: "QR code invalide");
@@ -55,6 +70,9 @@ class DatabaseHolder extends ChangeNotifier {
     prenomIndex = value[0].indexOf("prenom");
     nomIndex = value[0].indexOf("nom");
     externeIndex = value[0].indexOf("externe");
+    getApplicationDocumentsDirectory().then((value){
+      dbPath = value.path;
+    });
   }
 }
 
@@ -63,6 +81,9 @@ class TicketUsableState {
     // ignore: prefer_initializing_formals
     this.reason = reason;
   }
+
+  /// Reason why the ticket is unusable
   late final String? reason;
+  /// If the ticket is usable or not
   final bool isUsable;
 }
