@@ -9,7 +9,12 @@ class ScannerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mobile Scanner')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, "/browseTickets");
+        },
+        child: const Icon(Icons.manage_search),
+      ),
       body: MobileScanner(
           allowDuplicates: false,
           onDetect: (barcode, args) {

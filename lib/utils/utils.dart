@@ -12,7 +12,6 @@ Future<List<List>> readAndParseDb() async {
   // If file exists retrieve contents from it, else read from assets and create the file
   if (fileExists) {
     String actualDb = await File('$path/db.csv').readAsString();
-    print(actualDb);
     return csvToList.convert(actualDb);
   } else {
     String db = await rootBundle.loadString('db/db.csv');

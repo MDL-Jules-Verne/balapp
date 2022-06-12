@@ -123,7 +123,7 @@ class _TicketRegisterState extends State<TicketRegister> {
                   ),
                   // color: Colors.blue,
                   child: const Text("CONFIRMER"),
-                  onPressed: () async {
+                  onPressed: () {
                     // Add to db
                     db.registerTicket(
                         ticketId,
@@ -131,7 +131,6 @@ class _TicketRegisterState extends State<TicketRegister> {
                         lastName: lastNameController.text,
                         isExternal: currentlySelectedOrigin == "external"
                     );
-                    // ignore: use_build_context_synchronously
                     Navigator.of(context).popAndPushNamed("/");
                     // Navigator.of(context).pushNamed("/");
                   },

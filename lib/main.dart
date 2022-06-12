@@ -1,5 +1,6 @@
 import 'package:balapp/screens/registerTicket.dart';
 import 'package:balapp/screens/scanner.dart';
+import 'package:balapp/screens/ticket_browser.dart';
 import 'package:balapp/utils/db.dart';
 import 'package:balapp/utils/utils.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
                     "/": (_) => const ScannerScreen(), // Route with different tabs for checking, validating and retrieving ticket data
                     "/checkTicket": (_) => const Scaffold(), // Route to go when validating a ticket
                     "/registerTicket": (_) => const SafeArea(child: TicketRegister()), // Route to go when buying a ticket
+                    "/browseTickets": (_) => const SafeArea(child: TicketBrowser()),
                   },
                 ),
               );

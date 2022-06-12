@@ -33,8 +33,6 @@ class DatabaseHolder extends ChangeNotifier {
 
   void writeToStorage() async {
     dbPath ??= (await getApplicationDocumentsDirectory()).path;
-    print(listToCsv.convert(value));
-    print('$dbPath/db.csv');
     await File('$dbPath/db.csv').writeAsString(listToCsv.convert(value));
   }
 
