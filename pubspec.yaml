@@ -39,6 +39,7 @@ dependencies:
   path_provider: ^2.0.11
   csv: ^5.0.1
   provider: ^6.0.3
+  figma_squircle: ^0.5.3
 
 dev_dependencies:
   flutter_test:
