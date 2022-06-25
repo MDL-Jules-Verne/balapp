@@ -61,6 +61,10 @@ class DatabaseHolder extends ChangeNotifier {
     return TicketUsableState(value[index][prenomIndex].length == 0, reason: "Billet déjà attribué à ${value[index][prenomIndex]} ${value[index][nomIndex]}");
   }
 
+  get noHeaderValue {
+    return value.sublist(1);
+  }
+
   DatabaseHolder(this.value){
     idIndex = value[0].indexOf("id");
     salleIndex = value[0].indexOf("salle");
