@@ -1,21 +1,42 @@
 import 'dart:io';
-import 'package:csv/csv.dart';
+
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
-const csvToList = CsvToListConverter();
+// const csvToList = CsvToListConverter();
 
-Future<List<List>> readAndParseDb() async {
+Future<List<List<String>>> readAndParseDb() async {
   String path = (await getApplicationDocumentsDirectory()).path;
   bool fileExists = await File('$path/db.csv').exists();
 
   // If file exists retrieve contents from it, else read from assets and create the file
   if (fileExists) {
     String actualDb = await File('$path/db.csv').readAsString();
-    return csvToList.convert(actualDb);
+    return readCsv(actualDb);
   } else {
     String db = await rootBundle.loadString('db/db.csv');
     await File('$path/db.csv').writeAsString(db);
-    return csvToList.convert(db);
+    return readCsv(db);
   }
+}
+
+Future<List<List<String>>> readCsv(String file) async {
+  // Assume EOL is CRLF
+  List<String> rows = file.split("\r\n");
+
+  // Adapt if EOL is LF
+  if (rows.length <= 1) {
+    rows = file.split("\n");
+  }
+
+  List<List<String>> output = [];
+  for (String row in rows) {
+    output.add(row.split(","));
+  }
+  print("${output.last}lolilol${output.last.length}");
+  if(output.last.length <= 1){
+    print("removed");
+    output.removeLast();
+  }
+  return output;
 }

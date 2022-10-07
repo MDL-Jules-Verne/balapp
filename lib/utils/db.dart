@@ -1,14 +1,15 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
 const listToCsv = ListToCsvConverter();
-class DatabaseHolder extends ChangeNotifier {
 
+class DatabaseHolder extends ChangeNotifier {
   /// List of lists, each representing a ticket
-  List<List> value;
+  List<List<String>> value;
 
   /// Index of the ID property in the lists
   late int idIndex;
@@ -28,64 +29,162 @@ class DatabaseHolder extends ChangeNotifier {
   /// Index of the externe property in the lists
   late int externeIndex;
 
+  /// Index of the hasEnteredIndex property in the lists
+  late int hasEnteredIndex;
+
+  /// Index of the registeredTimestampIndex property in the lists
+  late int registeredTimestampIndex;
+
+  /// Index of the enteredTimestampIndex property in the lists
+  late int enteredTimestampIndex;
+
+  /// Index of the leaveTimestampIndex property in the lists
+  late int leaveTimestampIndex;
+
   /// Where to store the db file on fs
   String? dbPath;
 
+  /// Last scanned tickets to be shown on the scan history thing
+  /// TODO: populate this with the last scanned from disk (registeredTimestamp property)
+  List<Ticket> lastScanned = [];
+
+  /// Return ticket as ticket object, parsing into correct types as well, for easier use
+  Ticket returnTicketAsClass(List ticketAsList) {
+    return Ticket(
+      prenom: ticketAsList[prenomIndex],
+      nom: ticketAsList[nomIndex],
+      registeredTimestamp: int.tryParse(ticketAsList[registeredTimestampIndex]),
+      enteredTimestamp: int.tryParse(ticketAsList[enteredTimestampIndex]),
+      leaveTimestamp: int.tryParse(ticketAsList[leaveTimestampIndex]),
+      id: ticketAsList[idIndex],
+      hasEntered: ticketAsList[hasEnteredIndex] == "true",
+      couleur: ticketAsList[couleurIndex],
+      externe: ticketAsList[externeIndex] == "true",
+      salle: int.parse(ticketAsList[salleIndex]),
+    );
+  }
+
+  /// Write the current state of the DB to storage
   void writeToStorage() async {
     dbPath ??= (await getApplicationDocumentsDirectory()).path;
     await File('$dbPath/db.csv').writeAsString(listToCsv.convert(value));
   }
 
+  /// Returns whether a ticket id is in the database
   bool isIdInDb(String ticketId) {
     return value.any((element) => element[idIndex] == ticketId);
   }
 
-  int findTicketIndex(String ticketId){
-    return value.indexWhere((element) => element[idIndex] == ticketId);
+  /// Returns index of the ticket having this ticketId
+  int findTicketIndex(String ticketId) {
+    return value.indexWhere((element) {
+      return element[idIndex] == ticketId;
+    });
   }
 
   /// Adds data to an empty ticket
-  void registerTicket(String id, {required String firstName, required String lastName, required bool isExternal}){
+  void registerTicket(String id, {required String firstName, required String lastName, required bool isExternal}) {
     int index = findTicketIndex(id);
-    if(index == -1) return;
+    if (index == -1) return;
     value[index][nomIndex] = lastName;
     value[index][prenomIndex] = firstName;
-    value[index][externeIndex] = isExternal;
+    value[index][externeIndex] = "$isExternal";
+    value[index][registeredTimestampIndex] = "${DateTime.now().millisecondsSinceEpoch ~/ 1000}";
+    lastScanned.insert(0, returnTicketAsClass(value[index]));
+    // Wait for pop anim before update
+    Future.delayed(const Duration(milliseconds: 300), () {
+      notifyListeners();
+    });
+    writeToStorage();
+  }
+
+  void resetTicket(String id) {
+    int ticketIndex = findTicketIndex(id);
+    List<String> ticket = value[ticketIndex];
+    ticket = [ticket[salleIndex], ticket[couleurIndex], "", "", "", "", "", "", "", ticket[idIndex]];
+    value[ticketIndex] = ticket;
+    lastScanned.removeWhere((element) => element.id == id);
+    Future.delayed(const Duration(milliseconds: 300), () {
+      notifyListeners();
+    });
     writeToStorage();
   }
 
   /// Returns if the ticket is usable and why
-  TicketUsableState isUsable(String id){
+  TicketUsableState isUsable(String id) {
     int index = findTicketIndex(id);
-    if(index == -1) return TicketUsableState(false, reason: "QR code invalide");
-    return TicketUsableState(value[index][prenomIndex].length == 0, reason: "Billet déjà attribué à ${value[index][prenomIndex]} ${value[index][nomIndex]}");
+    if (index == -1) return TicketUsableState(false, reason: "QR code invalide");
+    return TicketUsableState(value[index][prenomIndex].isEmpty,
+        reason: "Billet déjà attribué à ${value[index][prenomIndex]} ${value[index][nomIndex]}");
   }
 
-  get noHeaderValue {
+  /// Returns the db's value as without the header row
+  List<List> get noHeaderValue {
     return value.sublist(1);
   }
 
-  DatabaseHolder(this.value){
+  /// Instantiates a DatabaseHolder from the parsed csv value
+  DatabaseHolder(this.value) {
     idIndex = value[0].indexOf("id");
     salleIndex = value[0].indexOf("salle");
     couleurIndex = value[0].indexOf("couleur");
     prenomIndex = value[0].indexOf("prenom");
     nomIndex = value[0].indexOf("nom");
+    hasEnteredIndex = value[0].indexOf("hasEntered");
+    registeredTimestampIndex = value[0].indexOf("registeredTimestamp");
+    enteredTimestampIndex = value[0].indexOf("enteredTimestamp");
+    leaveTimestampIndex = value[0].indexOf("leaveTimestamp");
     externeIndex = value[0].indexOf("externe");
-    getApplicationDocumentsDirectory().then((value){
+    getApplicationDocumentsDirectory().then((value) {
       dbPath = value.path;
     });
+    // find last scanned
+    var temp = List.from(noHeaderValue.where((e) {
+        return e[registeredTimestampIndex].length > 1;
+    }));
+    temp.sort((a, b) => int.parse(b[registeredTimestampIndex]) - int.parse(a[registeredTimestampIndex]));
+    for (List<String> item in temp.sublist(0, min(temp.length, 20))) {
+      lastScanned.add(returnTicketAsClass(item));
+    }
   }
 }
 
+/// Clearer way to see usability of a ticket
 class TicketUsableState {
-  TicketUsableState(this.isUsable, {reason}){
+  TicketUsableState(this.isUsable, {reason}) {
     // ignore: prefer_initializing_formals
     this.reason = reason;
   }
 
   /// Reason why the ticket is unusable
   late final String? reason;
+
   /// If the ticket is usable or not
   final bool isUsable;
+}
+
+/// Better representation of a ticket, easier to use than the list
+class Ticket {
+  final bool externe;
+  final String id;
+  final String couleur;
+  final String prenom;
+  final String nom;
+  final bool hasEntered;
+  final int salle;
+  final int? registeredTimestamp;
+  final int? enteredTimestamp;
+  final int? leaveTimestamp;
+
+  Ticket(
+      {required this.externe,
+      required this.id,
+      required this.couleur,
+      required this.prenom,
+      required this.nom,
+      required this.hasEntered,
+      required this.salle,
+      required this.registeredTimestamp,
+      required this.enteredTimestamp,
+      required this.leaveTimestamp});
 }

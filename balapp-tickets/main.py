@@ -25,7 +25,7 @@ fullDb = []
 colorNb = 0
 roomNb = 1
 execStart = time.time()
-for i in range(1, 3001):
+for i in range(1, 501):
     ticketData = {}
     qr = qrcode.QRCode(
         version=1,
@@ -69,7 +69,7 @@ for i in range(1, 3001):
 
 print(time.time() - execStart)
 with open("../db/db.csv", 'w', newline='') as csvfile:
-    writer = csv.DictWriter(csvfile, fieldnames=["salle", "couleur", "prenom", "nom", "externe", "id"])
+    writer = csv.DictWriter(csvfile, fieldnames=["salle", "couleur", "prenom", "hasEntered", "nom", "registeredTimestamp", "enteredTimestamp", "leaveTimestamp", "externe", "id"])
     writer.writeheader()
     for key in fullDb:
         writer.writerow(key)
