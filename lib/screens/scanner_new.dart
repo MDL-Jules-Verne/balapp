@@ -1,8 +1,10 @@
+import 'package:balapp/consts.dart';
 import 'package:balapp/utils/db.dart';
 import 'package:balapp/utils/prefs_inherited.dart';
 import 'package:balapp/widgets/ticket_details.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -37,6 +39,14 @@ class _ScannerNewState extends State<ScannerNew> {
         preferredSize: Size(100.w, topBarSize),
         child: AppBar(
           actions: [
+            IconButton(
+              onPressed: () async {
+                //TODO: add db to send
+                var res = await http.post(Uri.parse("$apiUrl/upload/initDb"));
+                print(res.body);
+              },
+              icon: const Icon(Icons.upload),
+            ),
             Padding(
               padding: EdgeInsets.only(right: 2.w),
               child: IconButton(
