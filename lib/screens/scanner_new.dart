@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:balapp/consts.dart';
 import 'package:balapp/utils/db.dart';
 import 'package:balapp/utils/prefs_inherited.dart';
+import 'package:balapp/widgets/nameDialog.dart';
 import 'package:balapp/widgets/ticket_details.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
@@ -18,11 +22,13 @@ class ScannerNew extends StatefulWidget {
 
 class _ScannerNewState extends State<ScannerNew> {
   bool isCameraOpen = false;
+  String scannerName = "";
 
   @override
   void initState() {
-    Future.delayed(const Duration(), () {
+    Future.delayed(const Duration(), () async {
       setState(() {
+        scannerName = InheritedPreferences.of(context)?.prefs.getString("scannerName") ?? "";
         isCameraOpen = InheritedPreferences.of(context)?.prefs.getBool("isCameraOpen") ?? false;
       });
     });
@@ -38,14 +44,43 @@ class _ScannerNewState extends State<ScannerNew> {
       appBar: PreferredSize(
         preferredSize: Size(100.w, topBarSize),
         child: AppBar(
+          title: Text(scannerName),
           actions: [
             IconButton(
               onPressed: () async {
                 //TODO: add db to send
-                var res = await http.post(Uri.parse("$apiUrl/upload/initDb"));
-                print(res.body);
+                var path = context.read<DatabaseHolder>().dbPath;
+                await File('$path/db.csv').delete();
               },
-              icon: const Icon(Icons.upload),
+              icon: const Icon(Icons.delete),
+            ),
+            IconButton(
+              onPressed: () async {
+                //TODO: add db to send
+                var lastScanned = context.read<DatabaseHolder>().lastScanned;
+                var res = await http.post(Uri.parse("$apiUrl/upload/addTickets"),
+                    headers: {
+                      "content-type": "application/json",
+                      "accept": "application/json",
+                    },
+                    body: jsonEncode(lastScanned.map((e) => e.toJson()).toList()));
+                debugPrint(res.body);
+              },
+              icon: const Icon(Icons.save),
+            ),
+            IconButton(
+              onPressed: () async {
+                //TODO: add db to send
+                var data = context.read<DatabaseHolder>();
+                var res = await http.post(Uri.parse("$apiUrl/upload/initDb"),
+                    headers: {
+                      "content-type": "application/json",
+                      "accept": "application/json",
+                    },
+                    body: jsonEncode({"data": data.noHeaderValue, "firstLine": data.value[0]}));
+                debugPrint(res.body);
+              },
+              icon: const Icon(Icons.cloud_upload),
             ),
             Padding(
               padding: EdgeInsets.only(right: 2.w),
@@ -129,11 +164,11 @@ class _ScannerNewState extends State<ScannerNew> {
                           child: Padding(
                             padding: EdgeInsets.fromLTRB(5.w, 0, 5.w, 10.h),
                             child: const Center(
-                            child: Text(
-                              "No tickets scanned from this phone for now",
-                              style: TextStyle(fontSize: 16, color: Colors.black38),
+                              child: Text(
+                                "No tickets scanned from this phone for now",
+                                style: TextStyle(fontSize: 16, color: Colors.black38),
+                              ),
                             ),
-                          ),
                           ),
                         );
                       }

@@ -10,6 +10,7 @@ class CustomTextInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
@@ -25,7 +26,7 @@ class CustomTextInput extends StatelessWidget {
         TextField(
           autocorrect: false,
           enableSuggestions: false,
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp("[a-zÀ-ÿ]|_,", caseSensitive: false))],
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp("[a-zÀ-ÿ]|-|_|,", caseSensitive: false))],
           // enableIMEPersonalizedLearning: false,
           decoration: InputDecoration(
             border: const OutlineInputBorder(),

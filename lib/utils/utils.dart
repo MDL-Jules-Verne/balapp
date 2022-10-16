@@ -34,7 +34,6 @@ Future<List<List<String>>> readCsv(String file) async {
     output.add(row.split(","));
   }
   if(output.last.length <= 1){
-    print("removed");
     output.removeLast();
   }
   return output;
