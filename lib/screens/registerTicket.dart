@@ -1,4 +1,5 @@
 import 'package:balapp/utils/db.dart';
+import 'package:balapp/utils/prefs_inherited.dart';
 import 'package:balapp/widgets/custom_text_input.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -60,7 +61,7 @@ class _TicketRegisterState extends State<TicketRegister> {
               SizedBox(
                 height: 2.h,
               ),
-              ElevatedButton(
+              if(InheritedPreferences.of(context)?.prefs.getString("scannerName") == "debug") ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(65.w, 7.h),
                   textStyle: TextStyle(fontSize: 2.85.h, fontWeight: FontWeight.w500),
@@ -158,7 +159,11 @@ class _TicketRegisterState extends State<TicketRegister> {
                   child: const Text("CONFIRMER"),
                   onPressed: () {
                     // Add to db
-                    db.registerTicket(ticketId,
+                    String? scannerName = InheritedPreferences.of(context)?.prefs.getString("scannerName");
+                    if (scannerName == null){
+                      throw ErrorDescription("Scanner name not found in context");
+                    }
+                    db.registerTicket(ticketId, scannerName,
                         firstName: firstNameController.text.toLowerCase(),
                         lastName: lastNameController.text.toLowerCase(),
                         isExternal: currentlySelectedOrigin == "external");

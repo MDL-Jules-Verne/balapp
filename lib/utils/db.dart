@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:csv/csv.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -32,20 +34,22 @@ class DatabaseHolder extends ChangeNotifier {
   /// Index of the hasEnteredIndex property in the lists
   late int hasEnteredIndex;
 
-  /// Index of the registeredTimestampIndex property in the lists
+  /// Index of the registeredTimestamp property in the lists
   late int registeredTimestampIndex;
 
-  /// Index of the enteredTimestampIndex property in the lists
+  /// Index of the enteredTimestamp property in the lists
   late int enteredTimestampIndex;
 
-  /// Index of the leaveTimestampIndex property in the lists
+  /// Index of the leaveTimestamp property in the lists
   late int leaveTimestampIndex;
+
+  /// Index of the whoEntered property in the lists
+  late int whoEnteredIndex;
 
   /// Where to store the db file on fs
   String? dbPath;
 
   /// Last scanned tickets to be shown on the scan history thing
-  /// TODO: populate this with the last scanned from disk (registeredTimestamp property)
   List<Ticket> lastScanned = [];
 
   /// Return ticket as ticket object, parsing into correct types as well, for easier use
@@ -58,6 +62,7 @@ class DatabaseHolder extends ChangeNotifier {
       leaveTimestamp: int.tryParse(ticketAsList[leaveTimestampIndex]),
       id: ticketAsList[idIndex],
       hasEntered: ticketAsList[hasEnteredIndex] == "true",
+      whoEntered: ticketAsList[whoEnteredIndex],
       couleur: ticketAsList[couleurIndex],
       externe: ticketAsList[externeIndex] == "true",
       salle: int.parse(ticketAsList[salleIndex]),
@@ -83,12 +88,13 @@ class DatabaseHolder extends ChangeNotifier {
   }
 
   /// Adds data to an empty ticket
-  void registerTicket(String id, {required String firstName, required String lastName, required bool isExternal}) {
+  void registerTicket(String id, String scannerName, {required String firstName, required String lastName, required bool isExternal,}) {
     int index = findTicketIndex(id);
     if (index == -1) return;
     value[index][nomIndex] = lastName;
     value[index][prenomIndex] = firstName;
     value[index][externeIndex] = "$isExternal";
+    value[index][whoEnteredIndex] = scannerName;
     value[index][registeredTimestampIndex] = "${DateTime.now().millisecondsSinceEpoch ~/ 1000}";
     lastScanned.insert(0, returnTicketAsClass(value[index]));
     // Wait for pop anim before update
@@ -124,7 +130,7 @@ class DatabaseHolder extends ChangeNotifier {
   }
 
   /// Instantiates a DatabaseHolder from the parsed csv value
-  DatabaseHolder(this.value) {
+  DatabaseHolder(this.value, String scannerName) {
     idIndex = value[0].indexOf("id");
     salleIndex = value[0].indexOf("salle");
     couleurIndex = value[0].indexOf("couleur");
@@ -135,15 +141,17 @@ class DatabaseHolder extends ChangeNotifier {
     enteredTimestampIndex = value[0].indexOf("enteredTimestamp");
     leaveTimestampIndex = value[0].indexOf("leaveTimestamp");
     externeIndex = value[0].indexOf("externe");
+    whoEnteredIndex = value[0].indexOf("whoEntered");
     getApplicationDocumentsDirectory().then((value) {
       dbPath = value.path;
     });
     // find last scanned
     var temp = List.from(noHeaderValue.where((e) {
-        return e[registeredTimestampIndex].length > 1;
+        return e[registeredTimestampIndex].length > 1 && scannerName == e[whoEnteredIndex];
     }));
     temp.sort((a, b) => int.parse(b[registeredTimestampIndex]) - int.parse(a[registeredTimestampIndex]));
-    for (List<String> item in temp.sublist(0, min(temp.length, 20))) {
+    // add only tickets scanned by this phone
+    for (List<String> item in temp) {
       lastScanned.add(returnTicketAsClass(item));
     }
   }
@@ -167,6 +175,7 @@ class TicketUsableState {
 class Ticket {
   final bool externe;
   final String id;
+  final String whoEntered;
   final String couleur;
   final String prenom;
   final String nom;
@@ -176,8 +185,26 @@ class Ticket {
   final int? enteredTimestamp;
   final int? leaveTimestamp;
 
+  Map toJson(){
+    return {
+      "id": id,
+      "salle": salle,
+      "couleur": couleur,
+      "prenom": prenom,
+      "nom": nom,
+      "externe": externe,
+      "hasEntered": hasEntered,
+      "whoEntered": whoEntered,
+      "timestamps": {
+        "registered": registeredTimestamp ?? 0,
+        "entered": enteredTimestamp ?? 0,
+        "leave": leaveTimestamp ?? 0,
+      }
+    };
+  }
+
   Ticket(
-      {required this.externe,
+      {required this.whoEntered,required this.externe,
       required this.id,
       required this.couleur,
       required this.prenom,
