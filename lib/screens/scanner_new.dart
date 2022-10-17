@@ -48,7 +48,12 @@ class _ScannerNewState extends State<ScannerNew> {
           actions: [
             IconButton(
               onPressed: () async {
-                //TODO: add db to send
+                Navigator.pushNamed(context, "/browseTickets");
+              },
+              icon: const Icon(Icons.search),
+            ),
+            IconButton(
+              onPressed: () async {
                 var path = context.read<DatabaseHolder>().dbPath;
                 await File('$path/db.csv').delete();
               },
@@ -56,7 +61,6 @@ class _ScannerNewState extends State<ScannerNew> {
             ),
             IconButton(
               onPressed: () async {
-                //TODO: add db to send
                 var lastScanned = context.read<DatabaseHolder>().lastScanned;
                 var res = await http.post(Uri.parse("$apiUrl/upload/addTickets"),
                     headers: {
@@ -70,7 +74,6 @@ class _ScannerNewState extends State<ScannerNew> {
             ),
             IconButton(
               onPressed: () async {
-                //TODO: add db to send
                 var data = context.read<DatabaseHolder>();
                 var res = await http.post(Uri.parse("$apiUrl/upload/initDb"),
                     headers: {

@@ -66,7 +66,7 @@ class MyApp extends StatelessWidget {
                               // Route to go when validating a ticket
                               "/registerTicket": (_) => const SafeArea(child: TicketRegister()),
                               // Route to go when buying a ticket
-                              "/browseTickets": (_) => const SafeArea(child: TicketBrowser()),
+                              "/browseTickets": (_) => TicketBrowser(),
                             },
                           ),
                         ),

@@ -125,8 +125,12 @@ class DatabaseHolder extends ChangeNotifier {
   }
 
   /// Returns the db's value as without the header row
-  List<List> get noHeaderValue {
+  List<List<String>> get noHeaderValue {
     return value.sublist(1);
+  }
+  /// Returns the db's value as without the header row
+  List<String> get header {
+    return value[0];
   }
 
   /// Instantiates a DatabaseHolder from the parsed csv value
