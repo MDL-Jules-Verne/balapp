@@ -3,13 +3,16 @@ import 'dart:io';
 
 import 'package:balapp/consts.dart';
 import 'package:balapp/utils/db.dart';
+import 'package:balapp/utils/isLocalServerConnected.dart';
 import 'package:balapp/utils/prefs_inherited.dart';
+import 'package:balapp/widgets/connectDialog.dart';
 import 'package:balapp/widgets/nameDialog.dart';
 import 'package:balapp/widgets/ticket_details.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
@@ -29,7 +32,10 @@ class _ScannerNewState extends State<ScannerNew> {
     Future.delayed(const Duration(), () async {
       setState(() {
         scannerName = InheritedPreferences.of(context)?.prefs.getString("scannerName") ?? "";
-        isCameraOpen = InheritedPreferences.of(context)?.prefs.getBool("isCameraOpen") ?? false;
+        /*isCameraOpen = InheritedPreferences
+            .of(context)
+            ?.prefs
+            .getBool("isCameraOpen") ?? false;*/
       });
     });
     super.initState();
@@ -46,18 +52,29 @@ class _ScannerNewState extends State<ScannerNew> {
         child: AppBar(
           title: Text(scannerName),
           actions: [
+            StatefulBuilder(builder: (context, setState) {
+              return FutureBuilder(
+                  future: isLocalServerConnected(context),
+                  builder: (context, res) {
+                    return IconButton(
+                      onPressed: () async {
+                        await showConnectDialog(context);
+                        setState(() {});
+                      },
+                      icon: Icon(Icons.wifi_tethering,
+                          color: res.data == true
+                              ? Colors.lightGreen
+                              : res.data == false
+                              ? Colors.redAccent
+                              : null),
+                    );
+                  });
+            }),
             IconButton(
               onPressed: () async {
                 Navigator.pushNamed(context, "/browseTickets");
               },
               icon: const Icon(Icons.search),
-            ),
-            IconButton(
-              onPressed: () async {
-                var path = context.read<DatabaseHolder>().dbPath;
-                await File('$path/db.csv').delete();
-              },
-              icon: const Icon(Icons.delete),
             ),
             IconButton(
               onPressed: () async {
@@ -74,31 +91,10 @@ class _ScannerNewState extends State<ScannerNew> {
             ),
             IconButton(
               onPressed: () async {
-                var data = context.read<DatabaseHolder>();
-                var res = await http.post(Uri.parse("$apiUrl/upload/initDb"),
-                    headers: {
-                      "content-type": "application/json",
-                      "accept": "application/json",
-                    },
-                    body: jsonEncode({"data": data.noHeaderValue, "firstLine": data.value[0]}));
-                debugPrint(res.body);
+                Navigator.pushNamed(context, "/settings");
               },
-              icon: const Icon(Icons.cloud_upload),
+              icon: const Icon(Icons.settings),
             ),
-            Padding(
-              padding: EdgeInsets.only(right: 2.w),
-              child: IconButton(
-                  onPressed: () async {
-                    setState(() {
-                      isCameraOpen = !isCameraOpen;
-                    });
-                    await InheritedPreferences.of(context)?.prefs.setBool('isCameraOpen', isCameraOpen);
-                  },
-                  icon: const Icon(
-                    Icons.swap_horiz_outlined,
-                    size: 26,
-                  )),
-            )
           ],
         ),
       ),
@@ -119,8 +115,8 @@ class _ScannerNewState extends State<ScannerNew> {
                         final String code = barcode.rawValue!;
                         debugPrint('Barcode found! $code');
                         //TODO: go to page only with valid barcode
-                        Navigator.of(context).popAndPushNamed("/registerTicket", arguments: code);
-                        // Navigator.of(context).pushNamed("/registerTicket", arguments: code);
+                        Navigator.of(context).pushNamed("/registerTicket", arguments: code);
+                        setState(() => isCameraOpen = false);
                       }
                     }),
               )
@@ -129,7 +125,18 @@ class _ScannerNewState extends State<ScannerNew> {
                 height: scannerSize,
                 child: Container(
                   color: Colors.pinkAccent,
-                  child: const Center(),
+                  child: Center(
+                      child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(fixedSize: Size(50.w, 6.h)),
+                    onPressed: () {
+                      setState(() => isCameraOpen = true);
+                      // InheritedPreferences.of(context)?.prefs.setString("isCameraOpen", "true");
+                    },
+                    child: const Text(
+                      "Activate camera",
+                      style: TextStyle(fontSize: 19),
+                    ),
+                  )),
                 ),
               ),
             Positioned(

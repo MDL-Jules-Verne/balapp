@@ -52,6 +52,8 @@ class DatabaseHolder extends ChangeNotifier {
   /// Last scanned tickets to be shown on the scan history thing
   List<Ticket> lastScanned = [];
 
+  late Function rebuildApp;
+
   /// Return ticket as ticket object, parsing into correct types as well, for easier use
   Ticket returnTicketAsClass(List ticketAsList) {
     return Ticket(
@@ -133,8 +135,9 @@ class DatabaseHolder extends ChangeNotifier {
     return value[0];
   }
 
+
   /// Instantiates a DatabaseHolder from the parsed csv value
-  DatabaseHolder(this.value, String scannerName) {
+  DatabaseHolder(this.value, String scannerName, this.rebuildApp) {
     idIndex = value[0].indexOf("id");
     salleIndex = value[0].indexOf("salle");
     couleurIndex = value[0].indexOf("couleur");

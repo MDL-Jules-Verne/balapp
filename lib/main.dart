@@ -1,5 +1,7 @@
+import 'package:balapp/screens/home.dart';
 import 'package:balapp/screens/registerTicket.dart';
 import 'package:balapp/screens/scanner_new.dart';
+import 'package:balapp/screens/settings.dart';
 import 'package:balapp/screens/ticket_browser.dart';
 import 'package:balapp/utils/db.dart';
 import 'package:balapp/utils/prefs_inherited.dart';
@@ -14,13 +16,23 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  Key key = UniqueKey();
+  void rebuildAllChildren() {
+    setState((){key = UniqueKey();});
+  }
   @override
   Widget build(BuildContext context) {
+
     return Container(
+      key: key,
       color: Colors.white,
       child: ResponsiveSizer(builder: (context, orientation, screenType) {
         return StatefulBuilder(
@@ -51,7 +63,7 @@ class MyApp extends StatelessWidget {
 
                         child: ChangeNotifierProvider<DatabaseHolder>(
                           lazy: false,
-                          create: (_) => DatabaseHolder(db.data as List<List<String>>, scannerName),
+                          create: (_) => DatabaseHolder(db.data as List<List<String>>, scannerName, rebuildAllChildren),
                           child: MaterialApp(
                             title: 'Flutter Demo',
                             theme: ThemeData(
@@ -60,13 +72,15 @@ class MyApp extends StatelessWidget {
                             ),
                             initialRoute: "/",
                             routes: {
-                              "/": (_) => const ScannerNew(),
+                              "/scanner": (_) => const ScannerNew(),
                               // Route with different tabs for checking, validating and retrieving ticket data
                               "/checkTicket": (_) => const Scaffold(),
                               // Route to go when validating a ticket
-                              "/registerTicket": (_) => const SafeArea(child: TicketRegister()),
+                              "/registerTicket": (_) => const TicketRegister(),
                               // Route to go when buying a ticket
-                              "/browseTickets": (_) => TicketBrowser(),
+                              "/browseTickets": (_) => const TicketBrowser(),
+                              "/settings": (_) => const Settings(),
+                              "/": (_)=> const Home(),
                             },
                           ),
                         ),
