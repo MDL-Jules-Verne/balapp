@@ -30,6 +30,7 @@ class _TicketRegisterState extends State<TicketRegister> {
     final args = ModalRoute.of(context)!.settings.arguments;
     ticketId = args as String;
     return Scaffold(
+      appBar: PreferredSize(preferredSize: Size(100.w, 6.5.h), child: AppBar(),),
       body: Consumer<DatabaseHolder>(builder: (context, db, _) {
         TicketUsableState ticketValidity = db.isUsable(ticketId);
         if (!ticketValidity.isUsable) {
@@ -55,7 +56,7 @@ class _TicketRegisterState extends State<TicketRegister> {
                 // color: Colors.blue,
                 child: const Text("Scanner à nouveau"),
                 onPressed: () {
-                  Navigator.of(context).popAndPushNamed("/");
+                  Navigator.pop(context);
                 },
               ),
               SizedBox(
@@ -70,7 +71,7 @@ class _TicketRegisterState extends State<TicketRegister> {
                 child: const Text("Supprimer"),
                 onPressed: () {
                   db.resetTicket(ticketId);
-                  Navigator.of(context).popAndPushNamed("/");
+                  Navigator.pop(context);
                 },
               ),
             ]),
@@ -167,7 +168,7 @@ class _TicketRegisterState extends State<TicketRegister> {
                         firstName: firstNameController.text.toLowerCase(),
                         lastName: lastNameController.text.toLowerCase(),
                         isExternal: currentlySelectedOrigin == "external");
-                    Navigator.of(context).popAndPushNamed("/");
+                    Navigator.pop(context);
                     // Navigator.of(context).pushNamed("/");
                   },
                 ),
