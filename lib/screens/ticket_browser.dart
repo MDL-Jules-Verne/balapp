@@ -1,5 +1,5 @@
 import 'package:balapp/utils/db.dart';
-import 'package:balapp/widgets/searchDialog.dart';
+import 'package:balapp/widgets/search_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';

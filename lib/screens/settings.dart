@@ -1,14 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:balapp/utils/call_apis.dart';
 import 'package:file_selector/file_selector.dart';
 
 import 'package:share_plus/share_plus.dart';
 import 'package:balapp/consts.dart';
 import 'package:balapp/utils/db.dart';
-import 'package:balapp/utils/isLocalServerConnected.dart';
-import 'package:balapp/widgets/confirmDialog.dart';
-import 'package:balapp/widgets/connectDialog.dart';
-import 'package:balapp/widgets/horizontalLine.dart';
+import 'package:balapp/utils/is_local_server_connected.dart';
+import 'package:balapp/widgets/confirm_dialog.dart';
+import 'package:balapp/widgets/connect_dialog.dart';
+import 'package:balapp/widgets/horizontal_line.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -42,21 +43,24 @@ class Settings extends StatelessWidget {
                         color: res.data == true
                             ? Colors.lightGreen
                             : res.data == false
-                                ? Colors.redAccent
-                                : null),
+                            ? Colors.redAccent
+                            : null),
                     title: const Text("Connexion au serveur local"),
                     subtitle: Text(res.data == true
                         ? "Connexion établie"
                         : res.data == false
-                            ? "Erreur lors de la connexion"
-                            : "Vérification..."),
+                        ? "Erreur lors de la connexion"
+                        : "Vérification..."),
                   );
                 });
           }),
           const HorizontalLine(),
           ListTile(
             onTap: () async {
-              Share.shareXFiles([XFile("${context.read<DatabaseHolder>().dbPath}/db.csv", name: "database.csv")]);
+              Share.shareXFiles([XFile("${context
+                  .read<DatabaseHolder>()
+                  .dbPath}/db.csv", name: "database.csv")
+              ]);
             },
             contentPadding: EdgeInsets.fromLTRB(4.w, 1.h, 3.w, 1.h),
             iconColor: Colors.black,
@@ -68,35 +72,25 @@ class Settings extends StatelessWidget {
           ),
           const HorizontalLine(),
           ListTile(
-            onTap: () async {
-              var lastScanned = context.read<DatabaseHolder>().lastScanned;
-              var res = await http.post(Uri.parse("$apiUrl/upload/addTickets"),
-                  headers: {
-                    "content-type": "application/json",
-                    "accept": "application/json",
-                  },
-                  body: jsonEncode(lastScanned.map((e) => e.toJson()).toList()));
-              // ignore: use_build_context_synchronously
-              showSuccessSnackBar(context, res.statusCode, successMessage: "Bases synchronisées");
-
-            },
+            onTap: ()=> saveTickets(context),
             contentPadding: EdgeInsets.fromLTRB(4.w, 1.h, 3.w, 1.h),
             iconColor: Colors.black,
             leading: const Icon(
               Icons.save,
             ),
             title: const Text("Synchroniser les bases"),
-            subtitle: const Text("Statut actuel de synchronisation: inconnu"), //TODO: find a way to know if you're synchronized
+            subtitle: const Text(
+                "Statut actuel de synchronisation: inconnu"), //TODO: find a way to know if you're synchronized
           ),
           const HorizontalLine(),
           ListTile(
             onTap: () async {
               await showConfirmDialog(context, "Supprimer base locale",
                   "ATTENTION, entraîne la perte de toutes les données non syncronisées", () async {
-                var db = context.read<DatabaseHolder>();
-                await File('${db.dbPath}/db.csv').delete();
-                db.rebuildApp();
-              });
+                    var db = context.read<DatabaseHolder>();
+                    await File('${db.dbPath}/db.csv').delete();
+                    db.rebuildApp();
+                  });
             },
             contentPadding: EdgeInsets.fromLTRB(4.w, 1.h, 3.w, 1.h),
             iconColor: Colors.black,
@@ -112,16 +106,12 @@ class Settings extends StatelessWidget {
             onTap: () {
               showConfirmDialog(context, "Copier la base locale sur le serveur",
                   "ATTENTION, cela supprime TOUTES les données présentes sur le serveur", () async {
-                var data = context.read<DatabaseHolder>();
-                var res = await http.post(Uri.parse("$apiUrl/upload/initDb"),
-                    headers: {
-                      "content-type": "application/json",
-                      "accept": "application/json",
-                    },
-                    body: jsonEncode({"data": data.noHeaderValue, "firstLine": data.value[0]}));
-                // ignore: use_build_context_synchronously
-                showSuccessSnackBar(context, res.statusCode, successMessage: "Copie effectuée");
-              });
+                    var db = context.read<DatabaseHolder>();
+                    var res = await httpCall("/upload/initDb", HttpMethod.post, db.localServer,
+                        body: jsonEncode({"data": db.noHeaderValue, "firstLine": db.value[0]}));
+                    // ignore: use_build_context_synchronously
+                    showSuccessSnackBar(context, res, successMessage: "Copie effectuée");
+                  });
             },
             contentPadding: EdgeInsets.fromLTRB(4.w, 1.h, 3.w, 1.h),
             iconColor: Colors.black,
@@ -136,12 +126,26 @@ class Settings extends StatelessWidget {
     );
   }
 }
-void showSuccessSnackBar(BuildContext context, int statusCode, {String successMessage = 'Action effectuée'}){
-  bool isSuccessful = 200 <= statusCode && 299 > statusCode;
+
+void showSuccessSnackBar(BuildContext context, DoubleResponse res, {String successMessage = 'Action effectuée'}) {
+  CallSuccess localCallSuccess = tellCallSuccess(res.networkResponse);
+  CallSuccess networkCallSuccess = tellCallSuccess(res.networkResponse);
+  int totalCalls = 0;
+  int successCalls = 0;
+  for (int i = 0; i<2; i++){
+    CallSuccess currentCall = i == 0 ? localCallSuccess : networkCallSuccess;
+    if(currentCall == CallSuccess.success){
+      totalCalls ++;
+      successCalls ++;
+    } else if(currentCall == CallSuccess.fail){
+      totalCalls ++;
+    }
+  }
+
   // ignore: use_build_context_synchronously
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     content:
-    Text(isSuccessful ? successMessage : "Une erreur est survenue"
-      , style: TextStyle(color: isSuccessful ? null : Colors.red, fontSize: isSuccessful ? null : 24),),
+    Text(totalCalls == successCalls ? successMessage : "Local call: $localCallSuccess, Network call: $networkCallSuccess"
+      , style: TextStyle(color: totalCalls == successCalls ? null : Colors.red, fontSize: totalCalls == successCalls ? null : 21),),
   ));
 }

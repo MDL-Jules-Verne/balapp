@@ -1,7 +1,9 @@
+import 'package:balapp/utils/db.dart';
 import 'package:balapp/utils/prefs_inherited.dart';
 import 'package:balapp/widgets/custom_text_input.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 showConnectDialog(BuildContext context,) {
@@ -10,7 +12,7 @@ showConnectDialog(BuildContext context,) {
 
     String? error;
     return StatefulBuilder(
-        builder: (context, setState) {
+        builder: (_, setState) {
           return AlertDialog(
             title: const Text("Local connect"),
             content: Column(
@@ -38,6 +40,7 @@ showConnectDialog(BuildContext context,) {
                   if(result.statusCode >= 200 && result.statusCode < 299) {
                     // ignore: use_build_context_synchronously
                     InheritedPreferences.of(context)?.prefs.setString("localServer", controller.text);
+                    context.read<DatabaseHolder>().setLocalSever(controller.text);
                     Navigator.pop(context);
 
                   } else {

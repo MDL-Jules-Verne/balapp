@@ -1,18 +1,15 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:balapp/consts.dart';
+import 'package:balapp/screens/settings.dart';
+import 'package:balapp/utils/call_apis.dart';
 import 'package:balapp/utils/db.dart';
-import 'package:balapp/utils/isLocalServerConnected.dart';
+import 'package:balapp/utils/is_local_server_connected.dart';
 import 'package:balapp/utils/prefs_inherited.dart';
-import 'package:balapp/widgets/connectDialog.dart';
-import 'package:balapp/widgets/nameDialog.dart';
+import 'package:balapp/widgets/connect_dialog.dart';
 import 'package:balapp/widgets/ticket_details.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
@@ -77,16 +74,7 @@ class _ScannerNewState extends State<ScannerNew> {
               icon: const Icon(Icons.search),
             ),
             IconButton(
-              onPressed: () async {
-                var lastScanned = context.read<DatabaseHolder>().lastScanned;
-                var res = await http.post(Uri.parse("$apiUrl/upload/addTickets"),
-                    headers: {
-                      "content-type": "application/json",
-                      "accept": "application/json",
-                    },
-                    body: jsonEncode(lastScanned.map((e) => e.toJson()).toList()));
-                debugPrint(res.body);
-              },
+              onPressed: ()=> saveTickets(context),
               icon: const Icon(Icons.save),
             ),
             IconButton(

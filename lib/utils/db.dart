@@ -10,6 +10,8 @@ import 'package:path_provider/path_provider.dart';
 const listToCsv = ListToCsvConverter();
 
 class DatabaseHolder extends ChangeNotifier {
+  String? localServer;
+
   /// List of lists, each representing a ticket
   List<List<String>> value;
 
@@ -69,6 +71,10 @@ class DatabaseHolder extends ChangeNotifier {
       externe: ticketAsList[externeIndex] == "true",
       salle: int.parse(ticketAsList[salleIndex]),
     );
+  }
+
+  void setLocalSever(ip){
+    localServer = ip;
   }
 
   /// Write the current state of the DB to storage
@@ -137,7 +143,7 @@ class DatabaseHolder extends ChangeNotifier {
 
 
   /// Instantiates a DatabaseHolder from the parsed csv value
-  DatabaseHolder(this.value, String scannerName, this.rebuildApp) {
+  DatabaseHolder(this.value, String scannerName, this.rebuildApp, this.localServer) {
     idIndex = value[0].indexOf("id");
     salleIndex = value[0].indexOf("salle");
     couleurIndex = value[0].indexOf("couleur");

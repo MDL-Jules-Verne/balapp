@@ -6,7 +6,7 @@ import 'package:balapp/screens/ticket_browser.dart';
 import 'package:balapp/utils/db.dart';
 import 'package:balapp/utils/prefs_inherited.dart';
 import 'package:balapp/utils/utils.dart';
-import 'package:balapp/widgets/nameDialog.dart';
+import 'package:balapp/widgets/name_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -25,28 +25,30 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   Key key = UniqueKey();
+
   void rebuildAllChildren() {
-    setState((){key = UniqueKey();});
+    setState(() {
+      key = UniqueKey();
+    });
   }
+
   @override
   Widget build(BuildContext context) {
-
     return Container(
       key: key,
       color: Colors.white,
       child: ResponsiveSizer(builder: (context, orientation, screenType) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return FutureBuilder<SharedPreferences>(
+        return StatefulBuilder(builder: (context, setState) {
+          return FutureBuilder<SharedPreferences>(
               future: SharedPreferences.getInstance(),
               builder: (context, AsyncSnapshot<SharedPreferences> prefs) {
-
                 if (!prefs.hasData || prefs.data == null) return const Center(child: CircularProgressIndicator());
                 // prefs.data?.setString("scannerName", "");
                 var scannerName = prefs.data?.getString("scannerName") ?? "";
                 if (scannerName == "") {
                   var textController = TextEditingController();
-                  return MaterialApp(home: nameDialog(context, textController, setState, prefs.data as SharedPreferences));
+                  return MaterialApp(
+                      home: nameDialog(context, textController, setState, prefs.data as SharedPreferences));
                 }
                 return FutureBuilder(
                     future: readAndParseDb(),
@@ -59,11 +61,12 @@ class _MyAppState extends State<MyApp> {
                         print(s);
                       }
                       return Container();*/
-                      return InheritedPreferences(prefs.data as SharedPreferences,
-
+                      return InheritedPreferences(
+                        prefs.data as SharedPreferences,
                         child: ChangeNotifierProvider<DatabaseHolder>(
                           lazy: false,
-                          create: (_) => DatabaseHolder(db.data as List<List<String>>, scannerName, rebuildAllChildren),
+                          create: (_) => DatabaseHolder(db.data as List<List<String>>, scannerName, rebuildAllChildren,
+                              prefs.data?.getString("localServer")),
                           child: MaterialApp(
                             title: 'Flutter Demo',
                             theme: ThemeData(
@@ -80,16 +83,14 @@ class _MyAppState extends State<MyApp> {
                               // Route to go when buying a ticket
                               "/browseTickets": (_) => const TicketBrowser(),
                               "/settings": (_) => const Settings(),
-                              "/": (_)=> const Home(),
+                              "/": (_) => const Home(),
                             },
                           ),
                         ),
                       );
                     });
-              }
-            );
-          }
-        );
+              });
+        });
       }),
     );
   }
