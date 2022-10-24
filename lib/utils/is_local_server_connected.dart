@@ -2,7 +2,7 @@ import 'dart:ffi';
 
 import 'package:balapp/utils/call_apis.dart';
 import 'package:balapp/utils/db.dart';
-import 'package:balapp/utils/prefs_inherited.dart';
+import 'package:balapp/widgets/prefs_inherited.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
 import 'package:provider/provider.dart';

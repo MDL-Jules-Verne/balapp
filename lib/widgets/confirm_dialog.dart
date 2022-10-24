@@ -1,4 +1,4 @@
-import 'package:balapp/utils/prefs_inherited.dart';
+import 'package:balapp/widgets/prefs_inherited.dart';
 import 'package:balapp/widgets/custom_text_input.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';

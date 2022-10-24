@@ -1,5 +1,5 @@
 import 'package:balapp/utils/db.dart';
-import 'package:balapp/utils/prefs_inherited.dart';
+import 'package:balapp/widgets/prefs_inherited.dart';
 import 'package:balapp/widgets/custom_text_input.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

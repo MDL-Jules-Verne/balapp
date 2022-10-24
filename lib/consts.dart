@@ -14,10 +14,12 @@ const Map<String, String> postHeaders = {
   "content-type": "application/json",
   "accept": "application/json",
 };
+const List<Widget> fakeWidgetArray = [SizedBox()];
+
 saveTickets(BuildContext context) async {
   var db = context.read<DatabaseHolder>();
   var res = await httpCall("/upload/addTickets", HttpMethod.post, db.localServer,
       body: jsonEncode(db.lastScanned.map((e) => e.toJson()).toList()));
   // ignore: use_build_context_synchronously
-  showSuccessSnackBar(context, res, successMessage: "Bases synchronisées");
+  showSuccessBanner(context, res, successMessage: "Bases synchronisées");
 }

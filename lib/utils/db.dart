@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:csv/csv.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 const listToCsv = ListToCsvConverter();
 
 class DatabaseHolder extends ChangeNotifier {
+  late String scannerName;
+
   String? localServer;
 
   /// List of lists, each representing a ticket
@@ -73,8 +73,12 @@ class DatabaseHolder extends ChangeNotifier {
     );
   }
 
-  void setLocalSever(ip){
+  void setLocalSever(ip) {
     localServer = ip;
+  }
+
+  void setScannerName(ip) {
+    scannerName = ip;
   }
 
   /// Write the current state of the DB to storage
@@ -88,15 +92,28 @@ class DatabaseHolder extends ChangeNotifier {
     return value.any((element) => element[idIndex] == ticketId);
   }
 
+  void markTicketAsUsed(int ticketIndex) {
+    value[ticketIndex][hasEnteredIndex] = "true";
+    // Wait for pop anim before update
+    Future.delayed(const Duration(milliseconds: 300), () {
+      notifyListeners();
+    });
+    writeToStorage();
+  }
+
   /// Returns index of the ticket having this ticketId
   int findTicketIndex(String ticketId) {
-    return value.indexWhere((element) {
-      return element[idIndex] == ticketId;
-    });
+    return value.indexWhere((element) => element[idIndex] == ticketId);
   }
 
   /// Adds data to an empty ticket
-  void registerTicket(String id, String scannerName, {required String firstName, required String lastName, required bool isExternal,}) {
+  void registerTicket(
+    String id,
+    String scannerName, {
+    required String firstName,
+    required String lastName,
+    required bool isExternal,
+  }) {
     int index = findTicketIndex(id);
     if (index == -1) return;
     value[index][nomIndex] = lastName;
@@ -136,14 +153,14 @@ class DatabaseHolder extends ChangeNotifier {
   List<List<String>> get noHeaderValue {
     return value.sublist(1);
   }
+
   /// Returns the db's value as without the header row
   List<String> get header {
     return value[0];
   }
 
-
   /// Instantiates a DatabaseHolder from the parsed csv value
-  DatabaseHolder(this.value, String scannerName, this.rebuildApp, this.localServer) {
+  DatabaseHolder(this.value, this.scannerName, this.rebuildApp, this.localServer) {
     idIndex = value[0].indexOf("id");
     salleIndex = value[0].indexOf("salle");
     couleurIndex = value[0].indexOf("couleur");
@@ -160,7 +177,7 @@ class DatabaseHolder extends ChangeNotifier {
     });
     // find last scanned
     var temp = List.from(noHeaderValue.where((e) {
-        return e[registeredTimestampIndex].length > 1 && scannerName == e[whoEnteredIndex];
+      return e[registeredTimestampIndex].length > 1 && scannerName == e[whoEnteredIndex];
     }));
     temp.sort((a, b) => int.parse(b[registeredTimestampIndex]) - int.parse(a[registeredTimestampIndex]));
     // add only tickets scanned by this phone
@@ -186,19 +203,19 @@ class TicketUsableState {
 
 /// Better representation of a ticket, easier to use than the list
 class Ticket {
-  final bool externe;
-  final String id;
-  final String whoEntered;
-  final String couleur;
-  final String prenom;
-  final String nom;
-  final bool hasEntered;
-  final int salle;
-  final int? registeredTimestamp;
-  final int? enteredTimestamp;
-  final int? leaveTimestamp;
+  late final bool externe;
+  late final String id;
+  late final String whoEntered;
+  late final String couleur;
+  late final String prenom;
+  late final String nom;
+  late final bool hasEntered;
+  late final int salle;
+  late final int? registeredTimestamp;
+  late final int? enteredTimestamp;
+  late final int? leaveTimestamp;
 
-  Map toJson(){
+  Map toJson() {
     return {
       "id": id,
       "salle": salle,
@@ -215,9 +232,23 @@ class Ticket {
       }
     };
   }
-
+  // This is used in TicketWithIndex
+  Ticket.fromTicket(Ticket ticket){
+    externe = ticket.externe;
+    id = ticket.id;
+    whoEntered = ticket.whoEntered;
+    couleur = ticket.couleur;
+    prenom = ticket.prenom;
+    nom = ticket.nom;
+    hasEntered = ticket.hasEntered;
+    salle = ticket.salle;
+    registeredTimestamp = ticket.registeredTimestamp;
+    enteredTimestamp = ticket.enteredTimestamp;
+    leaveTimestamp = ticket.leaveTimestamp;
+  }
   Ticket(
-      {required this.whoEntered,required this.externe,
+      {required this.whoEntered,
+      required this.externe,
       required this.id,
       required this.couleur,
       required this.prenom,
@@ -226,5 +257,25 @@ class Ticket {
       required this.salle,
       required this.registeredTimestamp,
       required this.enteredTimestamp,
-      required this.leaveTimestamp});
+      required this.leaveTimestamp,
+      });
+}
+
+class TicketWithIndex extends Ticket {
+  late final int index;
+
+  TicketWithIndex.fromTicket(Ticket ticket, this.index) : super.fromTicket(ticket);
+
+  TicketWithIndex(
+      {required super.whoEntered,
+      required super.externe,
+      required super.id,
+      required super.couleur,
+      required super.prenom,
+      required super.nom,
+      required super.hasEntered,
+      required super.salle,
+      required super.registeredTimestamp,
+      required super.enteredTimestamp,
+      required super.leaveTimestamp, required this.index});
 }

@@ -19,7 +19,7 @@ Future<SearchOptions?> showSearchDialog(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(height: 2.h,),
-                    Text("Chercher par:"),
+                    const Text("Chercher par:"),
                     DropdownButton<String>(
                           value: searchBy,
                             items: <List<String>>[

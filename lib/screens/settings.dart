@@ -110,7 +110,7 @@ class Settings extends StatelessWidget {
                     var res = await httpCall("/upload/initDb", HttpMethod.post, db.localServer,
                         body: jsonEncode({"data": db.noHeaderValue, "firstLine": db.value[0]}));
                     // ignore: use_build_context_synchronously
-                    showSuccessSnackBar(context, res, successMessage: "Copie effectuée");
+                    showSuccessBanner(context, res, successMessage: "Copie effectuée");
                   });
             },
             contentPadding: EdgeInsets.fromLTRB(4.w, 1.h, 3.w, 1.h),
@@ -127,7 +127,7 @@ class Settings extends StatelessWidget {
   }
 }
 
-void showSuccessSnackBar(BuildContext context, DoubleResponse res, {String successMessage = 'Action effectuée'}) {
+void showSuccessBanner(BuildContext context, DoubleResponse res, {String successMessage = 'Action effectuée'}) {
   CallSuccess localCallSuccess = tellCallSuccess(res.networkResponse);
   CallSuccess networkCallSuccess = tellCallSuccess(res.networkResponse);
   int totalCalls = 0;
@@ -142,10 +142,19 @@ void showSuccessSnackBar(BuildContext context, DoubleResponse res, {String succe
     }
   }
 
+  var scaffoldMessenger = ScaffoldMessenger.of(context);
+
+  Future.delayed(const Duration(seconds: 4), ()=>{
+    scaffoldMessenger.hideCurrentMaterialBanner()
+  });
+
   // ignore: use_build_context_synchronously
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  scaffoldMessenger.showMaterialBanner(MaterialBanner(
+    elevation: 5,
+    backgroundColor: Colors.white,
+    leading: Icon(totalCalls == successCalls ? Icons.check : Icons.clear,color: totalCalls == successCalls ? Colors.green : Colors.red,),
     content:
     Text(totalCalls == successCalls ? successMessage : "Local call: $localCallSuccess, Network call: $networkCallSuccess"
-      , style: TextStyle(color: totalCalls == successCalls ? null : Colors.red, fontSize: totalCalls == successCalls ? null : 21),),
+      , style: TextStyle(color: totalCalls == successCalls ? Colors.green : Colors.red, fontSize: totalCalls == successCalls ? null : 21),), actions: fakeWidgetArray,
   ));
 }

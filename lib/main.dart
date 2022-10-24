@@ -1,10 +1,11 @@
 import 'package:balapp/screens/home.dart';
 import 'package:balapp/screens/registerTicket.dart';
-import 'package:balapp/screens/scanner_new.dart';
+import 'package:balapp/screens/scanner.dart';
 import 'package:balapp/screens/settings.dart';
 import 'package:balapp/screens/ticket_browser.dart';
+import 'package:balapp/screens/validate_ticket.dart';
 import 'package:balapp/utils/db.dart';
-import 'package:balapp/utils/prefs_inherited.dart';
+import 'package:balapp/widgets/prefs_inherited.dart';
 import 'package:balapp/utils/utils.dart';
 import 'package:balapp/widgets/name_dialog.dart';
 import 'package:flutter/material.dart';
@@ -75,9 +76,9 @@ class _MyAppState extends State<MyApp> {
                             ),
                             initialRoute: "/",
                             routes: {
-                              "/scanner": (_) => const ScannerNew(),
+                              "/scanner": (_) => const Scanner(),
                               // Route with different tabs for checking, validating and retrieving ticket data
-                              "/checkTicket": (_) => const Scaffold(),
+                              "/validate": (_) => const TicketValidator(),
                               // Route to go when validating a ticket
                               "/registerTicket": (_) => const TicketRegister(),
                               // Route to go when buying a ticket

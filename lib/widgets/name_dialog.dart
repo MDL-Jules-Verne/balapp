@@ -1,6 +1,8 @@
-import 'package:balapp/utils/prefs_inherited.dart';
+import 'package:balapp/utils/db.dart';
+import 'package:balapp/widgets/prefs_inherited.dart';
 import 'package:balapp/widgets/custom_text_input.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Widget nameDialog(BuildContext context, TextEditingController controller, StateSetter setState, SharedPreferences prefs,
@@ -27,7 +29,10 @@ Widget nameDialog(BuildContext context, TextEditingController controller, StateS
         child: const Text("Confirm (can't be changed again)"),
         onPressed: () {
           prefs.setString("scannerName", controller.text);
-          // Navigator.pop(context, controller.text);
+          try{
+            context.read<DatabaseHolder>().setScannerName(controller.text);
+          // ignore: empty_catches
+          } on ProviderNotFoundException{}
           setState(() {});
         },
       )
