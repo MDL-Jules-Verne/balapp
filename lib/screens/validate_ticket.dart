@@ -41,7 +41,7 @@ class TicketValidator extends StatelessWidget {
               }
 
               Ticket ticket = db.returnTicketAsClass(db.value[ticketIndex]);
-              if (ticket.hasEntered == !true) {
+              if (ticket.hasEntered == true) {
                 await showErrorValidateDialog(context, "Erreur", "Ce ticket a déjà été utilisé", ValidateErrorReasons.alreadyEntered);
                 return controller.start();
               } else if (ticket.nom == "") {

@@ -8,15 +8,15 @@ import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 
 Future<bool> isLocalServerConnected(BuildContext context) async {
-  DoubleResponse result;
+  Response result;
   try {
-    result = await httpCall("/testConnection", HttpMethod.get, context.read<DatabaseHolder>().localServer, runNetworkCall: false)
-        .timeout(const Duration(seconds: 3), onTimeout: () => DoubleResponse(localResponse: Response("Timeout", 400), networkResponse: null));
+    result = await httpCall("/testConnection", HttpMethod.get, context.read<DatabaseHolder>().localServer)
+        .timeout(const Duration(seconds: 3), onTimeout: () => Response("Timeout", 400));
   } catch (e,s) {
     print(e);
     return false;
   }
-  if (result.localResponse!.statusCode >= 200 && result.localResponse!.statusCode < 299 && result.localResponse!.body == "connection established local") {
+  if (result.statusCode >= 200 && result.statusCode < 299 && result.body == "connection established") {
     // ignore: use_build_context_synchronously
     return true;
   } else {

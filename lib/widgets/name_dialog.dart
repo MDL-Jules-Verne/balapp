@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Widget nameDialog(BuildContext context, TextEditingController controller, StateSetter setState, SharedPreferences prefs,
+Widget nameDialog(BuildContext context, StateSetter? setState, SharedPreferences prefs,
     {bool isIntentional = false}) {
+  TextEditingController controller = TextEditingController();
   return AlertDialog(
     title: const Text("Enter a name"),
     content: Column(
@@ -17,23 +18,25 @@ Widget nameDialog(BuildContext context, TextEditingController controller, StateS
       ],
     ),
     actions: [
-      if (isIntentional)
+      /*if (isIntentional)
         TextButton(
           child: const Text('Delete'),
           onPressed: () {
             InheritedPreferences.of(context)?.prefs.setString("scannerName", "");
             Navigator.pop(context, controller.text);
           },
-        ),
+        ),*/
       TextButton(
         child: const Text("Confirm (can't be changed again)"),
         onPressed: () {
+          if(controller.text.isEmpty) return;
           prefs.setString("scannerName", controller.text);
           try{
             context.read<DatabaseHolder>().setScannerName(controller.text);
           // ignore: empty_catches
           } on ProviderNotFoundException{}
-          setState(() {});
+          if(setState != null)setState(() {});
+          else Navigator.pop(context, controller.text);
         },
       )
     ],

@@ -18,8 +18,9 @@ class TicketDetails extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Container(
-          padding: EdgeInsets.symmetric(vertical: 1.h, horizontal: 2.w),
-          width: 12.w,
+          padding: EdgeInsets.symmetric(vertical: 0.5.h, horizontal: 2.w),
+          width: 14.w,
+          height: 4.h,
           decoration: ShapeDecoration(
               shape: SmoothRectangleBorder(
                 borderRadius: SmoothBorderRadius(
@@ -28,14 +29,16 @@ class TicketDetails extends StatelessWidget {
                 ),
               ),
               color: ticket.externe ? kPurple : kGreen),
-          child: Text(
-            ticket.externe ? "EXT" : "INT",
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          child: Center(
+            child: Text(
+              ticket.externe ? "EXT" : "INT",
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
         ),
         SizedBox(
@@ -50,17 +53,18 @@ class TicketDetails extends StatelessWidget {
             children: [
               Text(
                 ticket.nom.toUpperCase(),
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                overflow: TextOverflow.ellipsis,
               ),
               Text(
-                ticket.prenom,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                toFirstCharUpperCase(ticket.prenom),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
               )
             ],
           ),
         ),
         SizedBox(width: 4.h,),
-        Text("#${ticket.id}", style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),)
+        Text("#${ticket.id}", style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500),)
       ],
     );
   }

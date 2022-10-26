@@ -1,6 +1,8 @@
 import 'package:balapp/screens/home.dart';
+import 'package:balapp/screens/init_screen.dart';
 import 'package:balapp/screens/registerTicket.dart';
 import 'package:balapp/screens/scanner.dart';
+import 'package:balapp/screens/scanner_new.dart';
 import 'package:balapp/screens/settings.dart';
 import 'package:balapp/screens/ticket_browser.dart';
 import 'package:balapp/screens/validate_ticket.dart';
@@ -47,9 +49,8 @@ class _MyAppState extends State<MyApp> {
                 // prefs.data?.setString("scannerName", "");
                 var scannerName = prefs.data?.getString("scannerName") ?? "";
                 if (scannerName == "") {
-                  var textController = TextEditingController();
                   return MaterialApp(
-                      home: nameDialog(context, textController, setState, prefs.data as SharedPreferences));
+                      home: InitScreen(setState: setState, prefs: prefs.data!,));
                 }
                 return FutureBuilder(
                     future: readAndParseDb(),
@@ -69,14 +70,17 @@ class _MyAppState extends State<MyApp> {
                           create: (_) => DatabaseHolder(db.data as List<List<String>>, scannerName, rebuildAllChildren,
                               prefs.data?.getString("localServer")),
                           child: MaterialApp(
+
                             title: 'Flutter Demo',
                             theme: ThemeData(
                               fontFamily: "Inter",
-                              primarySwatch: Colors.blue,
+
+                              // primarySwatch: Colors.blue,
+                              useMaterial3: true
                             ),
                             initialRoute: "/",
                             routes: {
-                              "/scanner": (_) => const Scanner(),
+                              "/scanner": (_) => const ScannerNew(),
                               // Route with different tabs for checking, validating and retrieving ticket data
                               "/validate": (_) => const TicketValidator(),
                               // Route to go when validating a ticket

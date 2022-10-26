@@ -12,6 +12,8 @@ class DatabaseHolder extends ChangeNotifier {
 
   String? localServer;
 
+  bool isWebsocketOpen = false;
+
   /// List of lists, each representing a ticket
   List<List<String>> value;
 
