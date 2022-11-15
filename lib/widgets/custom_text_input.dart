@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:responsive_sizer/responsive_sizer.dart';
 
 class CustomTextInput extends StatelessWidget {
   const CustomTextInput({Key? key, required this.controller, required this.label, this.showTopLabel = true, this.disableFormatter=false}) : super(key: key);
@@ -23,8 +22,8 @@ class CustomTextInput extends StatelessWidget {
             style: const TextStyle(fontSize: 20),
           ),
         ),
-        if(showTopLabel) SizedBox(
-          height: 1.h,
+        if(showTopLabel) const SizedBox(
+          height: 8,
         ),
         TextField(
           autocorrect: false,
