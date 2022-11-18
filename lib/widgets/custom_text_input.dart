@@ -31,10 +31,12 @@ class CustomTextInput extends StatelessWidget {
           inputFormatters: [if (!disableFormatter) FilteringTextInputFormatter.allow(RegExp("[a-zÀ-ÿ]|-|_|,", caseSensitive: false))],
           // enableIMEPersonalizedLearning: false,
           decoration: InputDecoration(
-            border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.fromLTRB(12, 24, 12, 16),
+            // border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.fromLTRB(8, 24, 12, 13),
             hintText: label,
+
           ),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
           controller: controller,
         ),
       ],

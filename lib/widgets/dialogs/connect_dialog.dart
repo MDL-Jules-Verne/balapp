@@ -2,8 +2,9 @@
 
 import 'dart:convert';
 
-import 'package:balapp_new/widgets/custom_text_input.dart';
+import 'package:balapp/widgets/custom_text_input.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -100,7 +101,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
 
 Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setError, required String uri}) async {
   final channel = WebSocketChannel.connect(Uri.parse('ws://$uri'));
-  channel.stream.listen((event) {
+  channel.stream.listen((event) async {
     String? mode;
     List? db;
     try {

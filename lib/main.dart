@@ -1,12 +1,19 @@
 import 'dart:async';
 
-import 'package:balapp_new/utils/database_holder.dart';
-import 'package:balapp_new/utils/init_future.dart';
+import 'package:balapp/screens/scanner_new.dart';
+import 'package:balapp/screens/settings.dart';
+import 'package:balapp/utils/database_holder.dart';
+import 'package:balapp/utils/init_future.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:responsive_sizer/responsive_sizer.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(ResponsiveSizer(
+    builder: (context, _  ,__) {
+      return const MyApp();
+    }
+  ));
 }
 
 class MyApp extends StatefulWidget {
@@ -50,7 +57,7 @@ class _MyAppState extends State<MyApp> {
     return Builder(
       //Changer pour un futureBuilder pour se co et load le nom
       builder: (context) {
-        DatabaseHolder db = DatabaseHolder(userData!.db);
+        DatabaseHolder db = DatabaseHolder(userData!.db, userData?.channel, userData!.dbPath);
         return ChangeNotifierProvider<DatabaseHolder>.value(
           value: db,
           child: MaterialApp(
@@ -59,13 +66,11 @@ class _MyAppState extends State<MyApp> {
 
                 // primarySwatch: Colors.blue,
                 useMaterial3: true),
-            home: Scaffold(
-              body: ListView.builder(itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(db.db[index].id),
-                );
-              }),
-            ),
+            initialRoute: "/scanner",
+            routes: {
+              "/scanner": (_) => const ScannerNew(),
+              "/settings": (_) => const Settings(),
+            },
           ),
         );
       },

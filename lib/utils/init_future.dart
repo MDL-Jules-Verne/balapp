@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:balapp_new/widgets/dialogs/connect_dialog.dart';
-import 'package:balapp_new/widgets/dialogs/name_dialog.dart';
+import 'package:balapp/widgets/dialogs/connect_dialog.dart';
+import 'package:balapp/widgets/dialogs/name_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
@@ -43,7 +43,7 @@ Future<InitData?> initApp(BuildContext context, ) async {
   }
   //TODO: handle skip
   prefs.setString("serverUrl", data[0]);
-  return InitData(scannerName: name, channel: data![3], db: data[2], appMode: data[1]);
+  return InitData(scannerName: name, channel: data![3], db: data[2], appMode: data[1], dbPath: path);
 }
 
 class InitData{
@@ -51,8 +51,9 @@ class InitData{
   AppMode appMode;
   List db;
   WebSocketChannel? channel;
+  String dbPath;
 
-  InitData({required this.scannerName, required this.channel, required this.db, required this.appMode});
+  InitData({required this.scannerName, required this.channel, required this.db, required this.appMode, required this.dbPath});
 }
 
 enum AppMode{

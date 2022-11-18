@@ -1,6 +1,6 @@
 
 
-import 'package:balapp_new/widgets/custom_text_input.dart';
+import 'package:balapp/widgets/custom_text_input.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
