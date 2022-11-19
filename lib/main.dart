@@ -57,7 +57,7 @@ class _MyAppState extends State<MyApp> {
     return Builder(
       //Changer pour un futureBuilder pour se co et load le nom
       builder: (context) {
-        DatabaseHolder db = DatabaseHolder(userData!.db, userData?.channel, userData!.dbPath);
+        DatabaseHolder db = DatabaseHolder(userData!.db, userData?.channel, userData!.dbPath, userData!.apiUrl);
         return ChangeNotifierProvider<DatabaseHolder>.value(
           value: db,
           child: MaterialApp(

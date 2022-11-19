@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:balapp/widgets/custom_text_input.dart';
 import 'package:flutter/material.dart';
@@ -100,7 +101,16 @@ class _ConnectDialogState extends State<ConnectDialog> {
 }
 
 Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setError, required String uri}) async {
-  final channel = WebSocketChannel.connect(Uri.parse('ws://$uri'));
+  WebSocketChannel channel;
+  try{
+    channel = WebSocketChannel.connect(Uri.parse('ws://$uri'));
+  } on SocketException {
+    return null;
+  } catch(e,s){
+    print(e);
+    print(s);
+    return null;
+  }
   channel.stream.listen((event) async {
     String? mode;
     List? db;

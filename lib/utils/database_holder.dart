@@ -6,10 +6,11 @@ class DatabaseHolder extends ChangeNotifier{
   List<Ticket> db = [];
   WebSocketChannel? ws;
   String dbPath;
+  String apiUrl;
   late bool isWebsocketOpen;
 
 
-  DatabaseHolder(List value, this.ws, this.dbPath) {
+  DatabaseHolder(List value, this.ws, this.dbPath, this.apiUrl) {
     isWebsocketOpen = ws != null;
 
     for(var e in value){

@@ -3,18 +3,19 @@ import 'dart:io';
 import 'package:balapp/widgets/dialogs/connect_dialog.dart';
 import 'package:balapp/widgets/dialogs/name_dialog.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-Future<InitData?> initApp(BuildContext context, ) async {
+Future<InitData?> initApp(
+  BuildContext context,
+) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   // await prefs.clear();
   String? name = prefs.getString("scannerName");
 
   if (name == null) {
-    while (name == null){
+    while (name == null) {
       name = await showNameDialog(context, prefs);
     }
   }
@@ -33,35 +34,46 @@ Future<InitData?> initApp(BuildContext context, ) async {
   // 0: uri, 1: appmode, 2: db, 3: channel
   List? data;
   String? serverUrl = prefs.getString("serverUrl");
-  if(serverUrl != null) {
-    data = await connectToServer(context, false, uri: serverUrl, setError: (err)=>print(err));
+  if (serverUrl != null) {
+    data = await connectToServer(context, false, uri: serverUrl, setError: (err) => print(err))
+        .timeout(const Duration(seconds: 4), onTimeout: () => null);
     print(data);
   }
 
-  while (data == null){
+  while (data == null) {
     data = await showConnectDialog(context, fileExists);
   }
   //TODO: handle skip
   prefs.setString("serverUrl", data[0]);
-  return InitData(scannerName: name, channel: data![3], db: data[2], appMode: data[1], dbPath: path);
+  print(data[0]);
+  return InitData(scannerName: name, channel: data![3], db: data[2], appMode: data[1], dbPath: path, apiUrl: data[0]);
 }
 
-class InitData{
+class InitData {
   String scannerName;
   AppMode appMode;
   List db;
   WebSocketChannel? channel;
   String dbPath;
+  String apiUrl;
 
-  InitData({required this.scannerName, required this.channel, required this.db, required this.appMode, required this.dbPath});
+  InitData(
+      {required this.scannerName,
+      required this.channel,
+      required this.db,
+      required this.appMode,
+      required this.dbPath, required this.apiUrl});
 }
 
-enum AppMode{
+enum AppMode {
   registerTickets("registerTickets"),
   verifyTickets("verifyTickets"),
   ;
+
   final String value;
+
   const AppMode(this.value);
+
   static AppMode? getByString(String str) {
     for (AppMode status in AppMode.values) {
       if (status.value == str) {
@@ -70,7 +82,6 @@ enum AppMode{
     }
     return null;
   }
-
 }
 
 Future<List<List<String>>> readCsv(String file) async {
@@ -91,4 +102,3 @@ Future<List<List<String>>> readCsv(String file) async {
   }
   return output;
 }
-
