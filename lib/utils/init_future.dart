@@ -37,7 +37,6 @@ Future<InitData?> initApp(
   if (serverUrl != null) {
     data = await connectToServer(context, false, uri: serverUrl, setError: (err) => print(err))
         .timeout(const Duration(seconds: 4), onTimeout: () => null);
-    print(data);
   }
 
   while (data == null) {
@@ -45,7 +44,6 @@ Future<InitData?> initApp(
   }
   //TODO: handle skip
   prefs.setString("serverUrl", data[0]);
-  print(data[0]);
   return InitData(scannerName: name, channel: data![3], db: data[2], appMode: data[1], dbPath: path, apiUrl: data[0]);
 }
 
