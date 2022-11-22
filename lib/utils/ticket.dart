@@ -22,7 +22,22 @@ class Ticket {
       "timestamps": timestamps
     };
   }
-  // This is used in TicketWithIndex
+  Ticket.fromJson(Map json){
+    externe    = json["externe"] ?? false;
+    id         = json["id"];
+    whoEntered = json["whoEntered"] ?? "";
+    couleur    = json["couleur"];
+    prenom     = json["prenom"] ?? "";
+    nom        = json["nom"] ?? "";
+    hasEntered = json["hasEntered"] ?? false;
+    salle      = json["salle"];
+    timestamps = json["timestamps"] ?? {
+      "registered": 0,
+      "entered": 0,
+      "leave": 0,
+    };
+  }
+  /// This is used in TicketWithIndex
   Ticket.fromTicket(Ticket ticket){
     externe = ticket.externe;
     id = ticket.id;

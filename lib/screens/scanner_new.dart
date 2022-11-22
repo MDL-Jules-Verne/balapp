@@ -1,14 +1,12 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:balapp/consts.dart';
-import 'package:balapp/utils/call_apis.dart';
 import 'package:balapp/utils/database_holder.dart';
-import 'package:balapp/widgets/qr_code_corners.dart';
 import 'package:balapp/widgets/register_ticket.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:pixel_perfect/pixel_perfect.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
@@ -23,19 +21,23 @@ class ScannerNew extends StatefulWidget {
 
 class _ScannerNewState extends State<ScannerNew> {
   bool isCameraOpen = false;
-  String? currentTicket = "XADB";
+  String? currentTicket;
   DateTime lastScan = DateTime.now();
-  List<Offset>? offsets;
   GlobalKey maskKey = GlobalKey();
-  Color squareColor = kGreen;
   Rect maskRect = Rect.fromLTWH(0, 0, 0, 0);
+  double historySize = 36.3.h;
+  double scannerSize = 100.h - 36.3.h + 20 /*Rounded corner size*/;
+
+  bool isLightOn = false;
+
+  MobileScannerController scanControl = MobileScannerController();
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       BuildContext? context = maskKey.currentContext;
-      if(context == null) {
+      if (context == null) {
         throw Exception("Key not found");
       }
       RenderBox box = context.findRenderObject() as RenderBox;
@@ -45,12 +47,21 @@ class _ScannerNewState extends State<ScannerNew> {
     });
   }
 
+  void finishEnter() {
+    scanControl.start();
+    setState(() {
+      currentTicket = null;
+    });
+    Future.delayed(const Duration(milliseconds: 1100), () {
+      if(isLightOn) scanControl.toggleTorch();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    double historySize = 36.3.h;
-    double scannerSize = 100.h - historySize + 20 /*Rounded corner size*/;
     return Consumer<DatabaseHolder>(builder: (context, db, _) {
       return Scaffold(
+        backgroundColor: Colors.black,
         // appBar: PreferredSize(preferredSize: Size(0,0), child: AppBar(),),//CustomAppBar(scannerName: db.scannerName),
         body: SizedBox(
           // width: 100.w,
@@ -61,44 +72,35 @@ class _ScannerNewState extends State<ScannerNew> {
                 SizedBox(
                   height: scannerSize,
                   child: MobileScanner(
+                      controller: scanControl,
                       allowDuplicates: true,
-                      onDetect: (barcode, args) async  {
-                        if (lastScan.add(const Duration(milliseconds: 32)).isAfter(DateTime.now())) return;
-                        lastScan = DateTime.now();
+                      onDetect: (barcode, args) async {
+                        if (lastScan.add(const Duration(seconds: 4)).isAfter(DateTime.now())) return;
                         if (barcode.rawValue == null) {
-                          debugPrint('Failed to scan Barcode');
-                        } else {
-
-                          final String code = barcode.rawValue!;
-                          // debugPrint('Barcode found! $code');
-                          // await httpCall("/ticketRegistration/ticketInfo/$code", HttpMethod.get, db.apiUrl);
-                          offsets = barcode.corners!.map((e)=>e.translate(-40,-40)).toList();
-
-
-
-                          int pointsInRect = 0;
-                          for (Offset i in offsets!){
-                            if(maskRect.contains(i)) pointsInRect++;
-                          }
-                          print(pointsInRect);
-
-                          /*if(pointsInRect == 4) {
-                            squareColor = kGreen;
-                          } else if(pointsInRect == 3) {
-                            squareColor = kGreenLight;
-                          } else if(pointsInRect == 2) {
-                            squareColor = kPurpleLight;
-                          } else if(pointsInRect == 1) {
-                            squareColor = kPurple;
-                          } else if(pointsInRect == 0) {
-                            squareColor = kRed;
-                          }*/
-                          if(pointsInRect < 2) return;
-                          setState(() {
-                            isCameraOpen = false;
-                            currentTicket = code;
-                          });
+                          return debugPrint('Failed to scan Barcode');
                         }
+
+                        final String code = barcode.rawValue!;
+                        if (code.runtimeType != String || code.length != kCodesLength) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(content: Text("Impossible de lire le qrCode")));
+                          return;
+                        }
+
+                        lastScan = DateTime.now();
+                        List<Offset> offsets = barcode.corners!.map((e) => e.translate(-40, -40)).toList();
+                        int pointsInRect = 0;
+                        for (Offset i in offsets) {
+                          if (maskRect.contains(i)) pointsInRect++;
+                        }
+                        if (pointsInRect < 2) return;
+
+                        setState(() {
+                          // isCameraOpen = false;
+                          currentTicket = code;
+                          scanControl.stop();
+                        });
+                        debugPrint('Barcode found! $code');
                       }),
                 )
               else
@@ -152,59 +154,71 @@ class _ScannerNewState extends State<ScannerNew> {
                 ),
               ),
               Positioned(
-                top: 4.h,
-                left: 3.h,
-                right: 3.h,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    CustomIconButton(
-                      icon: Icons.arrow_back_rounded,
-                      onTap: () => Navigator.pop(context),
-                    ),
-                    ClipSmoothRect(
-                      radius: SmoothBorderRadius(
-                        cornerRadius: 18,
-                        cornerSmoothing: 1,
+                  top: 4.h,
+                  left: 3.h,
+                  right: 3.h,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CustomIconButton(
+                        icon: Icons.arrow_back_rounded,
+                        onTap: () => Navigator.pop(context),
                       ),
-                      child: Container(
-                        color: kWhite,
-                        padding: EdgeInsets.symmetric(vertical: 0.3.h, horizontal: 2.w),
-                        child: Row(
-                          children: [
-                            CustomIconButton(
-                                backgroundColor: db.isWebsocketOpen ? kWhite : kRed,
-                                iconColor: db.isWebsocketOpen ? kGreen : kWhite,
-                                paddingSizeDelta: -1,
-                                paddingWidthDelta: -0.5,
-                                icon: db.isWebsocketOpen ? Icons.wifi_tethering : Icons.wifi_tethering_off,
-                                onTap: () {}),
-                            SizedBox(
-                              width: 1.w,
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(top: 0.4.h),
-                              child: CustomIconButton(
-                                  paddingSizeDelta: -1, paddingWidthDelta: -0.5, icon: Icons.search, onTap: () {}),
-                            ),
-                            SizedBox(
-                              width: 1.w,
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(bottom: 0.25.h),
-                              child: CustomIconButton(
+                      ClipSmoothRect(
+                        radius: SmoothBorderRadius(
+                          cornerRadius: 18,
+                          cornerSmoothing: 1,
+                        ),
+                        child: Container(
+                          color: kWhite,
+                          padding: EdgeInsets.symmetric(vertical: 0.3.h, horizontal: 2.w),
+                          child: Row(
+                            children: [
+                              CustomIconButton(
+                                  backgroundColor: db.isWebsocketOpen ? kWhite : kRed,
+                                  iconColor: db.isWebsocketOpen ? kGreen : kWhite,
                                   paddingSizeDelta: -1,
                                   paddingWidthDelta: -0.5,
-                                  icon: Icons.highlight,
+                                  icon: db.isWebsocketOpen ? Icons.wifi_tethering : Icons.wifi_tethering_off,
                                   onTap: () {}),
-                            )
-                          ],
+                              SizedBox(
+                                width: 1.w,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(top: 0.4.h),
+                                child: CustomIconButton(
+                                    paddingSizeDelta: -1, paddingWidthDelta: -0.5, icon: Icons.search, onTap: () {}),
+                              ),
+                              SizedBox(
+                                width: 1.w,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(bottom: 0.25.h),
+                                child: ValueListenableBuilder(
+                                    valueListenable: scanControl.torchState,
+                                    builder: (context, state, _) {
+                                      return CustomIconButton(
+                                          paddingSizeDelta: -1,
+                                          paddingWidthDelta: -0.5,
+                                          icon: Icons.highlight,
+                                          iconColor: state == TorchState.on ? kGreenLight : kBlack,
+                                          onTap: () async {
+                                            scanControl.toggleTorch();
+
+                                            if (state == TorchState.on) {
+                                              isLightOn = false;
+                                            } else {
+                                              isLightOn = true;
+                                            }
+                                          });
+                                    }),
+                              )
+                            ],
+                          ),
                         ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
+                      )
+                    ],
+                  )),
               Positioned(
                 bottom: 0,
                 child: ClipSmoothRect(
@@ -224,16 +238,8 @@ class _ScannerNewState extends State<ScannerNew> {
                         width: 100.w,
                         child: Container() /*ScanHistory(tickets: db.lastScanned)*/)),
               ),
-              if (currentTicket != null) const Positioned(bottom: 0, child: RegisterTicket()),
-              // Positioned.fromRect(rect: maskRect, child: IgnorePointer(child: Container(color: Colors.amber.withOpacity(0.5),))),
-              if(offsets != null)Positioned.fill(
-                child: IgnorePointer(
-                  child: CustomPaint(
-                    size: Size(100.w, 100.h),
-                    painter: QrCodePainter(offsets!, squareColor)
-                  ),
-                ),
-              )
+              if (currentTicket != null)
+                Positioned(bottom: 0, child: RegisterTicket(currentTicket!, db.apiUrl, finishEnter)),
             ],
           ),
         ),

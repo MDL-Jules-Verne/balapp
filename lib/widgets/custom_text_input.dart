@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class CustomTextInput extends StatelessWidget {
-  const CustomTextInput({Key? key, required this.controller, required this.label, this.showTopLabel = true, this.disableFormatter=false}) : super(key: key);
+  const CustomTextInput({Key? key, required this.controller, required this.label, this.showTopLabel = true, this.disableFormatter=false, this.callback}) : super(key: key);
   final TextEditingController controller;
   final String label;
   final bool showTopLabel;
   final bool disableFormatter;
+  final void Function(String?)? callback;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +27,7 @@ class CustomTextInput extends StatelessWidget {
           height: 8,
         ),
         TextField(
+          onChanged: callback,
           autocorrect: false,
           enableSuggestions: false,
           inputFormatters: [if (!disableFormatter) FilteringTextInputFormatter.allow(RegExp("[a-zÀ-ÿ]|-|_|,", caseSensitive: false))],
