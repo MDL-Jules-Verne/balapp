@@ -1,13 +1,18 @@
 class Ticket {
-  late final bool externe;
+  late bool externe;
   late final String id;
-  late final String whoEntered;
+  late String whoEntered;
   late final String couleur;
-  late final String prenom;
-  late final String nom;
-  late final bool hasEntered;
+  late String prenom;
+  late String nom;
+  late bool hasEntered;
   late final int salle;
-  late final Map timestamps;
+  late Map timestamps;
+
+  @override
+  String toString(){
+    return "Ticket(${toJson()})";
+  }
 
   Map toJson() {
     return {
@@ -22,6 +27,7 @@ class Ticket {
       "timestamps": timestamps
     };
   }
+
   Ticket.fromJson(Map json){
     externe    = json["externe"] ?? false;
     id         = json["id"];

@@ -2,11 +2,13 @@ import 'dart:convert';
 
 import 'package:balapp/consts.dart';
 import 'package:balapp/utils/call_apis.dart';
+import 'package:balapp/utils/database_holder.dart';
 import 'package:balapp/utils/ticket.dart';
 import 'package:balapp/widgets/custom_text_input.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:http/src/response.dart';
+import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 class RegisterTicket extends StatefulWidget {
@@ -62,16 +64,22 @@ class _RegisterTicketState extends State<RegisterTicket> {
               try {
                 String res = jsonDecode(result.body)["res"];
                 return {"error": true, "data": res.toString()};
-              } catch (e) {
+              } catch (e,s) {
+                print(e);
+                print(s);
                 return {"error": true, "data": "Http code non successful nor parsable"};
               }
             }
             try {
               Map<String, dynamic> data = Map.castFrom(json.decode(result.body));
               if (data["success"] == false) return {"error": true, "data": "HTTP call not successful"};
-              //TODO: warn if this ticket is already used
+
               ticket = Ticket.fromJson(data["res"]);
-              return data;
+              if(ticket!.prenom == "") {
+                return data;
+              } else {
+                return {"error": true, "data": "Ce ticket est déjà utilisé"};
+              }
             } catch (e, s) {
               print(e);
               print(s);
@@ -100,6 +108,15 @@ class _RegisterTicketState extends State<RegisterTicket> {
                     Text(
                       res.data?["data"] as String,
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    ElevatedButton(
+                      onPressed: (){
+                        widget.dismiss();
+                      },
+                      child: const Text("Ok")
                     )
                   ],
                 ),
@@ -109,8 +126,8 @@ class _RegisterTicketState extends State<RegisterTicket> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Enregistrer un ticket",
+                Text(
+                  "Ticket #${widget.ticketId}",
                   style: h3,
                 ),
                 const SizedBox(
@@ -202,9 +219,19 @@ class _RegisterTicketState extends State<RegisterTicket> {
                           child: Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: !isReady ? null : () {
-                                // httpCall(HttpMethod.post, "/ticketRegistration/enterTicket/")
-                                widget.dismiss();
+                              onPressed: !isReady ? null : () async {
+                                ticket!.prenom = firstNameController.text;
+                                ticket!.nom = lastNameController.text;
+                                ticket!.externe = isExternal!;
+                                ticket!.whoEntered = context.read<DatabaseHolder>().scannerName;
+                                Response result = await httpCall("/ticketRegistration/enterTicket/", HttpMethod.post, widget.apiUrl, body: jsonEncode(ticket!.toJson()));
+                                if (result.statusCode > 299 || result.statusCode < 200) {
+                                  setState(() {
+                                    error = result.body;
+                                  });
+                                } else {
+                                  widget.dismiss();
+                                }
                               },
                               style: TextButton.styleFrom(
                                   padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),

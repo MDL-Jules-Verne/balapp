@@ -28,8 +28,8 @@ class CustomIconButton extends StatelessWidget {
         cornerSmoothing: 1,
       ),
       child: SizedBox(
-        height: (6.5 + paddingSizeDelta).h,
-        width: (14.5 + paddingSizeDelta * 2 + paddingWidthDelta).w,
+        height: 60 + paddingSizeDelta,
+        width: 60 + paddingWidthDelta + paddingSizeDelta,
         child: Material(
           color: backgroundColor,
           child: InkWell(

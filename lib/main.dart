@@ -5,12 +5,17 @@ import 'package:balapp/screens/settings.dart';
 import 'package:balapp/utils/database_holder.dart';
 import 'package:balapp/utils/init_future.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 void main() {
   runApp(ResponsiveSizer(
     builder: (context, _  ,__) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
       return const MyApp();
     }
   ));
@@ -57,7 +62,7 @@ class _MyAppState extends State<MyApp> {
     return Builder(
       //Changer pour un futureBuilder pour se co et load le nom
       builder: (context) {
-        DatabaseHolder db = DatabaseHolder(userData!.db, userData?.channel, userData!.dbPath, userData!.apiUrl);
+        DatabaseHolder db = DatabaseHolder(userData!.db, userData?.channel, userData!.dbPath, userData!.apiUrl, userData!.scannerName);
         return ChangeNotifierProvider<DatabaseHolder>.value(
           value: db,
           child: MaterialApp(
