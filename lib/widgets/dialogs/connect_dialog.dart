@@ -1,5 +1,6 @@
-// ignore_for_file: use_build_context_synchronously
 
+
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -39,8 +40,8 @@ class _ConnectDialogState extends State<ConnectDialog> {
           const Text("Enter IP address of local server"),
           CustomTextInput(
             controller: controller,
-            label: "",
             disableFormatter: true,
+            padding: const EdgeInsets.fromLTRB(8, 13, 12, 13),
           ),
           if (error != null)
             Text(
@@ -55,7 +56,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
               onPressed: () {
                 skipButtonTap++;
                 if (skipButtonTap == 7) {
-                  Navigator.pop(context, "");
+                  Navigator.pop(context, []);
                 }
               },
               child: const Text(
@@ -111,7 +112,9 @@ Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setErr
     print(s);
     return null;
   }
-  channel.stream.listen((event) async {
+  StreamSubscription? sub;
+  Stream broadcast = channel.stream.asBroadcastStream();
+  sub = broadcast.listen((event) async {
     String? mode;
     List? db;
     try {
@@ -129,7 +132,8 @@ Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setErr
       if(!fromPopup) Navigator.pop(context);
       return;
     }
-      Navigator.pop(context, [uri, appMode, db, channel]);
+      sub?.cancel();
+      Navigator.pop(context, [uri, appMode, db, channel, broadcast]);
   });
   channel.sink.add('Hello!');
   if(!fromPopup) return await Navigator.push(context, MaterialPageRoute(builder: (_)=>Container()));

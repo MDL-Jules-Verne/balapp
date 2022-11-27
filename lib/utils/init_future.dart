@@ -31,7 +31,7 @@ Future<InitData?> initApp(
   // Connect webSocket
   String path = (await getApplicationDocumentsDirectory()).path;
   bool fileExists = await File('$path/db.json').exists();
-  // 0: uri, 1: appmode, 2: db, 3: channel
+  // 0: uri, 1: appmode, 2: db, 3: channel, 4: broadcast
   List? data;
   String? serverUrl = prefs.getString("serverUrl");
   if (serverUrl != null) {
@@ -44,14 +44,15 @@ Future<InitData?> initApp(
   }
   //TODO: handle skip
   prefs.setString("serverUrl", data[0]);
-  return InitData(scannerName: name, channel: data![3], db: data[2], appMode: data[1], dbPath: path, apiUrl: data[0]);
+  return InitData(scannerName: name, channel: data[3],wsBroadcast: data[4], db: data[2], appMode: data[1], dbPath: path, apiUrl: data[0]);
 }
 
 class InitData {
   String scannerName;
   AppMode appMode;
   List db;
-  WebSocketChannel? channel;
+  WebSocketChannel channel;
+  Stream wsBroadcast;
   String dbPath;
   String apiUrl;
 
@@ -60,7 +61,7 @@ class InitData {
       required this.channel,
       required this.db,
       required this.appMode,
-      required this.dbPath, required this.apiUrl});
+      required this.dbPath, required this.apiUrl, required this.wsBroadcast});
 }
 
 enum AppMode {

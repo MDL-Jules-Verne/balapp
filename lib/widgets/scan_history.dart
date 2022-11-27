@@ -9,19 +9,20 @@ class ScanHistory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(4.h, 3.5.h, 4.h, 4.h),
+      padding: EdgeInsets.fromLTRB(28, 28, 4.h, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text("Scan history", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),),
-          // SizedBox(height: 2.5.h),
+          SizedBox(height: 20),
           SizedBox(
-            height: 22.2.h,
+            height: 22.h,
             child: tickets.isNotEmpty ? ListView.separated(
+              padding: EdgeInsets.zero ,
               // shrinkWrap: true,
               itemCount: tickets.length,
               separatorBuilder: (BuildContext context, int index){
-                return SizedBox(height: 3.h,); // Should be 4.h
+                return const SizedBox(height: 18,); // Should be 4.h
                 // return Container();
               },
               itemBuilder: (context, index){

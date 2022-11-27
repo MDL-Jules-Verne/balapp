@@ -4,19 +4,33 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 class DatabaseHolder extends ChangeNotifier {
   List<Ticket> db = [];
-  WebSocketChannel? ws;
+  Stream wsStream;
   String dbPath;
   String apiUrl;
   String scannerName;
   late bool isWebsocketOpen;
   late List<Ticket> lastScanned;
+  int retryLimit = 3;
 
   // TODO: this ?
   // late List<Ticket> lastScannedGlobal;
 
-  DatabaseHolder(List value, this.ws, this.dbPath, this.apiUrl, this.scannerName) {
-    isWebsocketOpen = ws != null;
-
+  DatabaseHolder(List value, WebSocketChannel ws, this.wsStream, this.dbPath, this.apiUrl, this.scannerName) {
+    isWebsocketOpen = ws.closeCode == null;
+    wsStream?.listen((message) {
+      print(message);
+    }, onDone: (){
+      isWebsocketOpen = false;
+      notifyListeners();
+    }, onError: (err){
+      isWebsocketOpen = false;
+      notifyListeners();
+      /*if(retryLimit > 0){
+        ws = WebSocketChannel.connect(Uri.parse('ws://$apiUrl'));
+        channel.sink.add('Hello!');
+        retryLimit --;
+      }*/
+    });
     for (var e in value) {
       db.add(Ticket(
         prenom: e["prenom"],

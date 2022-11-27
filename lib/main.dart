@@ -38,6 +38,11 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     if (isFirstTime) {
       return MaterialApp(
+        theme: ThemeData(
+            fontFamily: "Inter",
+
+            // primarySwatch: Colors.blue,
+            useMaterial3: true),
         home: Builder(
           builder: (
             context,
@@ -60,16 +65,13 @@ class _MyAppState extends State<MyApp> {
       );
     }
     return Builder(
-      //Changer pour un futureBuilder pour se co et load le nom
       builder: (context) {
-        DatabaseHolder db = DatabaseHolder(userData!.db, userData?.channel, userData!.dbPath, userData!.apiUrl, userData!.scannerName);
+        DatabaseHolder db = DatabaseHolder(userData!.db, userData!.channel, userData!.wsBroadcast, userData!.dbPath, userData!.apiUrl, userData!.scannerName);
         return ChangeNotifierProvider<DatabaseHolder>.value(
           value: db,
           child: MaterialApp(
             theme: ThemeData(
                 fontFamily: "Inter",
-
-                // primarySwatch: Colors.blue,
                 useMaterial3: true),
             initialRoute: "/scanner",
             routes: {

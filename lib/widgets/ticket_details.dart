@@ -19,12 +19,12 @@ class TicketDetails extends StatelessWidget {
       children: [
         Container(
           padding: EdgeInsets.symmetric(vertical: 0.5.h, horizontal: 2.w),
-          width: 14.w,
-          height: 4.h,
+          width: 48,
+          height: 32,
           decoration: ShapeDecoration(
               shape: SmoothRectangleBorder(
                 borderRadius: SmoothBorderRadius(
-                  cornerRadius: 10,
+                  cornerRadius: 7,
                   cornerSmoothing: 1,
                 ),
               ),
@@ -33,8 +33,8 @@ class TicketDetails extends StatelessWidget {
             child: Text(
               ticket.externe ? "EXT" : "INT",
               style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w800,
                 color: Colors.white,
               ),
               textAlign: TextAlign.center,

@@ -2,28 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class CustomTextInput extends StatelessWidget {
-  const CustomTextInput({Key? key, required this.controller, required this.label, this.showTopLabel = true, this.disableFormatter=false, this.callback}) : super(key: key);
+  const CustomTextInput({Key? key, required this.controller, this.label, this.disableFormatter=false, this.callback, this.padding = const EdgeInsets.fromLTRB(8, 24, 12, 13)}) : super(key: key);
   final TextEditingController controller;
-  final String label;
-  final bool showTopLabel;
+  final String? label;
   final bool disableFormatter;
   final void Function(String?)? callback;
+  final EdgeInsets padding;
 
   @override
   Widget build(BuildContext context) {
-
+  print(label);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if(showTopLabel) Padding(
+        if(label != null) Padding(
           padding: const EdgeInsets.only(left: 6),
           child: Text(
-            label,
+            label!,
             style: const TextStyle(fontSize: 20),
           ),
         ),
-        if(showTopLabel) const SizedBox(
+        if(label != null) const SizedBox(
           height: 8,
         ),
         TextField(
@@ -34,7 +34,7 @@ class CustomTextInput extends StatelessWidget {
           // enableIMEPersonalizedLearning: false,
           decoration: InputDecoration(
             // border: const OutlineInputBorder(),
-            contentPadding: const EdgeInsets.fromLTRB(8, 24, 12, 13),
+            contentPadding: padding,
             hintText: label,
 
           ),

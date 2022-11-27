@@ -139,7 +139,6 @@ class _RegisterTicketState extends State<RegisterTicket> {
                   },
                   controller: firstNameController,
                   label: 'Prénom',
-                  showTopLabel: false,
                 ),
                 const SizedBox(
                   height: 5,
@@ -150,7 +149,6 @@ class _RegisterTicketState extends State<RegisterTicket> {
                   },
                   controller: lastNameController,
                   label: 'Nom',
-                  showTopLabel: false,
                 ),
                 if (error != null)
                   Text(
