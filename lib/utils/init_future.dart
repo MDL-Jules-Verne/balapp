@@ -35,7 +35,7 @@ Future<InitData?> initApp(
   List? data;
   String? serverUrl = prefs.getString("serverUrl");
   if (serverUrl != null) {
-    data = await connectToServer(context, false, uri: serverUrl, setError: (err) => print(err))
+    data = await connectToServer(context, false, uri: Uri.parse(serverUrl), setError: (err) => print(err))
         .timeout(const Duration(seconds: 4), onTimeout: () => null);
   }
 
@@ -43,25 +43,22 @@ Future<InitData?> initApp(
     data = await showConnectDialog(context, fileExists);
   }
   //TODO: handle skip
-  prefs.setString("serverUrl", data[0]);
-  return InitData(scannerName: name, channel: data[3],wsBroadcast: data[4], db: data[2], appMode: data[1], dbPath: path, apiUrl: data[0]);
+  prefs.setString("serverUrl", data[0].toString());
+  return InitData(scannerName: name, db: data[2], appMode: data[1], dbPath: path, apiUrl: data[0]);
 }
 
 class InitData {
   String scannerName;
   AppMode appMode;
   List db;
-  WebSocketChannel channel;
-  Stream wsBroadcast;
   String dbPath;
-  String apiUrl;
+  Uri apiUrl;
 
   InitData(
       {required this.scannerName,
-      required this.channel,
       required this.db,
       required this.appMode,
-      required this.dbPath, required this.apiUrl, required this.wsBroadcast});
+      required this.dbPath, required this.apiUrl});
 }
 
 enum AppMode {

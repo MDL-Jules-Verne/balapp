@@ -66,7 +66,7 @@ class _MyAppState extends State<MyApp> {
     }
     return Builder(
       builder: (context) {
-        DatabaseHolder db = DatabaseHolder(userData!.db, userData!.channel, userData!.wsBroadcast, userData!.dbPath, userData!.apiUrl, userData!.scannerName);
+        DatabaseHolder db = DatabaseHolder(userData!.db, userData!.dbPath, userData!.apiUrl, userData!.scannerName, context);
         return ChangeNotifierProvider<DatabaseHolder>.value(
           value: db,
           child: MaterialApp(
@@ -75,8 +75,18 @@ class _MyAppState extends State<MyApp> {
                 useMaterial3: true),
             initialRoute: "/scanner",
             routes: {
-              "/scanner": (_) => const ScannerNew(),
-              "/settings": (_) => const Settings(),
+              "/scanner": (_) => Builder(
+                builder: (context) {
+                  context.read<DatabaseHolder>().setContext(context);
+                  return const ScannerNew();
+                }
+              ),
+              "/settings": (_) => Builder(
+                builder: (context) {
+                  context.read<DatabaseHolder>().setContext(context);
+                  return const Settings();
+                }
+              ),
             },
           ),
         );

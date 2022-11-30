@@ -67,7 +67,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
           child: const Text("Confirm"),
           onPressed: () {
             connectToServer( context, true,
-                setError: (newErr) => setState(() => error = newErr), uri: controller.text);
+                setError: (newErr) => setState(() => error = newErr), uri: Uri.parse("ws://${controller.text}"));
 
             /*dynamic result;
             try {
@@ -101,10 +101,10 @@ class _ConnectDialogState extends State<ConnectDialog> {
   }
 }
 
-Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setError, required String uri}) async {
+Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setError, required Uri uri}) async {
   WebSocketChannel channel;
   try{
-    channel = WebSocketChannel.connect(Uri.parse('ws://$uri'));
+      channel = WebSocketChannel.connect(uri);
   } on SocketException {
     return null;
   } catch(e,s){
@@ -115,6 +115,7 @@ Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setErr
   StreamSubscription? sub;
   Stream broadcast = channel.stream.asBroadcastStream();
   sub = broadcast.listen((event) async {
+    if(event == "testConnection") return;
     String? mode;
     List? db;
     try {
@@ -122,21 +123,28 @@ Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setErr
       mode = data["mode"];
       db = data["db"] as List;
     } catch (e) {
+      print(e);
       if (setError != null) setError("Error parsing message");
+      channel.sink.close();
       if(!fromPopup) Navigator.pop(context);
       return;
     }
     AppMode? appMode = AppMode.getByString(mode ?? '');
     if (appMode == null) {
+      channel.sink.close();
       if (setError != null) setError("This AppMode doesn't exist");
       if(!fromPopup) Navigator.pop(context);
       return;
     }
       sub?.cancel();
+      channel.sink.close();
       Navigator.pop(context, [uri, appMode, db, channel, broadcast]);
   });
-  channel.sink.add('Hello!');
-  if(!fromPopup) return await Navigator.push(context, MaterialPageRoute(builder: (_)=>Container()));
+  channel.sink.add('hello');
+  if(!fromPopup) {
+    return await Navigator.push(context,  PageRouteBuilder(opaque: false,pageBuilder: (_, __, ___) => Container(),
+  ),);
+  }
   if(!fromPopup) Navigator.pop(context);
   return null;
 }

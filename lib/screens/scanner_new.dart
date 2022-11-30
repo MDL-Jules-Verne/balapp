@@ -83,7 +83,7 @@ class _ScannerNewState extends State<ScannerNew> {
             height: 100.h,
             child: Stack(
               children: [
-                if (isCameraOpen == true && kDebugMode)
+                if (isCameraOpen == true || !kDebugMode)
                   SizedBox(
                     height: scannerSize,
                     child: MobileScanner(

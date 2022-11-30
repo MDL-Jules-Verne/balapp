@@ -14,7 +14,7 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 class RegisterTicket extends StatefulWidget {
   const RegisterTicket(this.ticketId, this.apiUrl, this.dismiss, {Key? key}) : super(key: key);
   final String ticketId;
-  final String apiUrl;
+  final Uri apiUrl;
   final void Function() dismiss;
 
   @override
@@ -59,7 +59,7 @@ class _RegisterTicketState extends State<RegisterTicket> {
           padding: const EdgeInsets.fromLTRB(31, 22, 33, 0),
           child: FutureBuilder(future: Future(() async {
             Response result =
-                await httpCall("/ticketRegistration/ticketInfo/${widget.ticketId}", HttpMethod.get, widget.apiUrl);
+                await httpCall("/ticketRegistration/ticketInfo/${widget.ticketId}", HttpMethod.get, widget.apiUrl.toString());
             if (result.statusCode > 299 || result.statusCode < 200) {
               try {
                 String res = jsonDecode(result.body)["res"];
@@ -222,7 +222,7 @@ class _RegisterTicketState extends State<RegisterTicket> {
                                 ticket!.nom = lastNameController.text;
                                 ticket!.externe = isExternal!;
                                 ticket!.whoEntered = context.read<DatabaseHolder>().scannerName;
-                                Response result = await httpCall("/ticketRegistration/enterTicket/", HttpMethod.post, widget.apiUrl, body: jsonEncode(ticket!.toJson()));
+                                Response result = await httpCall("/ticketRegistration/enterTicket/", HttpMethod.post, widget.apiUrl.toString(), body: jsonEncode(ticket!.toJson()));
                                 if (result.statusCode > 299 || result.statusCode < 200) {
                                   setState(() {
                                     error = result.body;

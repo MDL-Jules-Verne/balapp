@@ -15,7 +15,6 @@ class QrCodePainter extends CustomPainter{
 
   @override
   bool shouldRepaint(covariant QrCodePainter oldDelegate) {
-    // TODO: implement shouldRepaint
     return offsets == oldDelegate.offsets || squareColor != oldDelegate.squareColor;
   }
 

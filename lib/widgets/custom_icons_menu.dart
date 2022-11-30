@@ -45,6 +45,8 @@ class CustomIconsMenu extends StatelessWidget {
                         onTap: () async {
                           //[uri, appMode, db, channel, broadcast]
                           List? wsData = await showConnectDialog(context, true);
+                          if(wsData == null) return;
+                          db.resetDb(wsData[2], wsData[0], );
                           //TODO: process this to change connection (don't forget to redownload db and every field that could change)
                         }),
                     CustomIconButton(
