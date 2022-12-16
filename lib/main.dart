@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:balapp/screens/home.dart';
 import 'package:balapp/screens/scanner_new.dart';
 import 'package:balapp/screens/settings.dart';
 import 'package:balapp/utils/database_holder.dart';
@@ -73,7 +74,7 @@ class _MyAppState extends State<MyApp> {
             theme: ThemeData(
                 fontFamily: "Inter",
                 useMaterial3: true),
-            initialRoute: "/scanner",
+            initialRoute: "/home",
             routes: {
               "/scanner": (_) => Builder(
                 builder: (context) {
@@ -81,10 +82,10 @@ class _MyAppState extends State<MyApp> {
                   return const ScannerNew();
                 }
               ),
-              "/settings": (_) => Builder(
+              "/home": (_) => Builder(
                 builder: (context) {
                   context.read<DatabaseHolder>().setContext(context);
-                  return const Settings();
+                  return const Home();
                 }
               ),
             },

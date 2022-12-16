@@ -67,7 +67,7 @@ class CustomIconsMenu extends StatelessWidget {
                                   setLightState(true);
                                 }
                               });
-                        })
+                        }),
                   ],
                 ),
               ),

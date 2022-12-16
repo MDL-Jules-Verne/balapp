@@ -14,7 +14,7 @@ class ScanHistory extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text("Scan history", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           SizedBox(
             height: 22.h,
             child: tickets.isNotEmpty ? ListView.separated(

@@ -68,101 +68,90 @@ class _ScannerNewState extends State<ScannerNew> {
 
   @override
   Widget build(BuildContext context) {
-    return PixelPerfect(
-      assetPath: 'assets/Scan.png',
-      scale: 1,
-      initBottom: 50,
-      offset: Offset.zero,
-      initOpacity: 0.0,
-      child: Consumer<DatabaseHolder>(builder: (context, db, _) {
-        return Scaffold(
-          backgroundColor: Colors.black,
-          // appBar: PreferredSize(preferredSize: Size(0,0), child: AppBar(),),//CustomAppBar(scannerName: db.scannerName),
-          body: SizedBox(
-            // width: 100.w,
-            height: 100.h,
-            child: Stack(
-              children: [
-                if (isCameraOpen == true || !kDebugMode)
-                  SizedBox(
-                    height: scannerSize,
-                    child: MobileScanner(
-                        controller: scanControl,
-                        allowDuplicates: true,
-                        onDetect: (barcode, args) async {
-                          if (lastScan.add(const Duration(seconds: 2)).isAfter(DateTime.now())) return;
-                          if (barcode.rawValue == null) return;
+    return Consumer<DatabaseHolder>(builder: (context, db, _) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        // appBar: PreferredSize(preferredSize: Size(0,0), child: AppBar(),),//CustomAppBar(scannerName: db.scannerName),
+        body: SizedBox(
+          // width: 100.w,
+          height: 100.h,
+          child: Stack(
+            children: [
+              if (isCameraOpen == true || !kDebugMode)
+                SizedBox(
+                  height: scannerSize,
+                  child: MobileScanner(
+                      controller: scanControl,
+                      allowDuplicates: true,
+                      onDetect: (barcode, args) async {
+                        if (lastScan.add(const Duration(seconds: 2)).isAfter(DateTime.now())) return;
+                        if (barcode.rawValue == null) return;
 
-                          final String code = barcode.rawValue!;
-                          if (code.runtimeType != String || code.length != kCodesLength) {
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(content: Text("Impossible de lire le qrCode")));
-                            return;
-                          }
+                        final String code = barcode.rawValue!;
+                        if (code.runtimeType != String || code.length != kCodesLength) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(content: Text("Impossible de lire le qrCode")));
+                          return;
+                        }
 
-                          lastScan = DateTime.now();
-                          List<Offset> offsets = barcode.corners!.map((e) => e.translate(-40, -40)).toList();
-                          int pointsInRect = 0;
-                          for (Offset i in offsets) {
-                            if (maskRect.contains(i)) pointsInRect++;
-                          }
-                          if (pointsInRect < 2) return;
+                        lastScan = DateTime.now();
+                        List<Offset> offsets = barcode.corners!.map((e) => e.translate(-40, -40)).toList();
+                        int pointsInRect = 0;
+                        for (Offset i in offsets) {
+                          if (maskRect.contains(i)) pointsInRect++;
+                        }
+                        if (pointsInRect < 2) return;
 
-                          setState(() {
-                            currentTicket = code;
-                            scanControl.stop();
-                          });
-                        }),
-                  )
-                else
-                  Container(
-                    height: scannerSize,
-                    width: 100.w,
-                    color: kBlack,
-                    child: Center(
-                        child: ElevatedButton(
-                      onPressed: () {
-                        scanControl.start();
                         setState(() {
-                          isCameraOpen = true;
+                          currentTicket = code;
+                          scanControl.stop();
                         });
-                      },
-                      child: Text("Activate camera"),
-                    )),
-                  ),
-                ScanMask(
-                  maskKey: maskKey,
-                  scannerSize: scannerSize,
+                      }),
+                )
+              else
+                Container(
+                  height: scannerSize,
+                  width: 100.w,
+                  color: kBlack,
+                  child: Center(
+                      child: ElevatedButton(
+                    onPressed: () {
+                      scanControl.start();
+                      setState(() {
+                        isCameraOpen = true;
+                      });
+                    },
+                    child: Text("Activate camera"),
+                  )),
                 ),
-                CustomIconsMenu(
-                  setLightState: setLightState,
-                  db: db,
-                  scanControl: scanControl,
-                ),
-                Positioned(
-                  bottom: 0,
-                  child: ClipSmoothRect(
-                      radius: const SmoothBorderRadius.only(
-                        topLeft: SmoothRadius(
-                          cornerRadius: 26,
-                          cornerSmoothing: 1,
-                        ),
-                        topRight: SmoothRadius(
-                          cornerRadius: 26,
-                          cornerSmoothing: 1,
-                        ),
+              ScanMask(
+                maskKey: maskKey,
+                scannerSize: scannerSize,
+              ),
+              CustomIconsMenu(
+                setLightState: setLightState,
+                db: db,
+                scanControl: scanControl,
+              ),
+              Positioned(
+                bottom: 0,
+                child: ClipSmoothRect(
+                    radius: const SmoothBorderRadius.vertical(
+                      top: SmoothRadius(
+                        cornerRadius: 26,
+                        cornerSmoothing: 1,
                       ),
-                      child: Container(
-                          color: kWhite, height: 35.h, width: 100.w, child: ScanHistory(tickets: db.lastScanned))),
-                ),
-                if (currentTicket != null)
-                  Positioned(bottom: 0, child: RegisterTicket(currentTicket!, db.apiUrl, finishEnter)),
-              ],
-            ),
+                    ),
+                    child: Container(
+                        color: kWhite, height: 35.h, width: 100.w, child: ScanHistory(tickets: db.lastScanned))),
+              ),
+              if (currentTicket != null)
+                Positioned(bottom: 0, child: RegisterTicket(currentTicket!, db.apiUrl, finishEnter)),
+            ],
           ),
-        );
-      }),
-    );
+        ),
+      );
+    });
   }
 }
 
