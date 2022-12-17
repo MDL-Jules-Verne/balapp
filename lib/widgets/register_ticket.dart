@@ -56,10 +56,11 @@ class _RegisterTicketState extends State<RegisterTicket> {
         height: 40.h,
         width: 100.w,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(31, 22, 33, 0),
+          padding: const EdgeInsets.fromLTRB(31, 18, 33, 0),
           child: FutureBuilder(future: Future(() async {
             Response result =
-                await httpCall("/ticketRegistration/ticketInfo/${widget.ticketId}", HttpMethod.get, widget.apiUrl.toString());
+                await httpCall("/ticketRegistration/ticketInfo/${widget.ticketId}", HttpMethod.get, widget.apiUrl);
+
             if (result.statusCode > 299 || result.statusCode < 200) {
               try {
                 String res = jsonDecode(result.body)["res"];
@@ -126,18 +127,26 @@ class _RegisterTicketState extends State<RegisterTicket> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Ticket #${widget.ticketId}",
-                  style: h3,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Ticket #${widget.ticketId}",
+                      style: h3,
+                    ),
+                    IconButton(onPressed: widget.dismiss, icon: const Icon(Icons.clear))
+                  ],
                 ),
                 const SizedBox(
-                  height: 10,
+                  height: 0,
                 ),
                 CustomTextInput(
                   callback: (_){
                     setState(() {});
                   },
                   controller: firstNameController,
+                  showLabelText: false,
                   label: 'Prénom',
                 ),
                 const SizedBox(
@@ -147,6 +156,7 @@ class _RegisterTicketState extends State<RegisterTicket> {
                   callback: (String? input){
                     setState(() {});
                   },
+                  showLabelText: false,
                   controller: lastNameController,
                   label: 'Nom',
                 ),
@@ -222,7 +232,7 @@ class _RegisterTicketState extends State<RegisterTicket> {
                                 ticket!.nom = lastNameController.text;
                                 ticket!.externe = isExternal!;
                                 ticket!.whoEntered = context.read<DatabaseHolder>().scannerName;
-                                Response result = await httpCall("/ticketRegistration/enterTicket/", HttpMethod.post, widget.apiUrl.toString(), body: jsonEncode(ticket!.toJson()));
+                                Response result = await httpCall("/ticketRegistration/enterTicket/", HttpMethod.post, widget.apiUrl, body: jsonEncode(ticket!.toJson()));
                                 if (result.statusCode > 299 || result.statusCode < 200) {
                                   setState(() {
                                     error = result.body;

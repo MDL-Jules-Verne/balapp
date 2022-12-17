@@ -10,7 +10,6 @@ import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:pixel_perfect/pixel_perfect.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
@@ -28,7 +27,7 @@ class _ScannerNewState extends State<ScannerNew> {
   GlobalKey maskKey = GlobalKey();
   Rect maskRect = Rect.fromLTWH(0, 0, 0, 0);
   double historySize = 36.3.h;
-  double  scannerSize = 100.h - 36.3.h + 35 /*Rounded corner size*/;
+  double scannerSize = 100.h - 36.3.h + 35 /*Rounded corner size*/;
 
   bool isLightOn = false;
 

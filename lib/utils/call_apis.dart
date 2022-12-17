@@ -1,14 +1,14 @@
 import 'package:balapp/consts.dart';
 import 'package:http/http.dart' as http;
 
-Future<http.Response> httpCall(String path, HttpMethod method, String? localServer, {String? body}) async {
+Future<http.Response> httpCall(String path, HttpMethod method, Uri localServer, {String? body}) async {
 
   Future<http.Response>? localCall;
-
   if (method == HttpMethod.get) {
-    localCall = http.get(Uri.parse("http://$localServer$path"));
+    print(localServer.replace(scheme:"http", path: path).toString());
+    localCall = http.get(localServer.replace(scheme:"http", path: path));
   } else if (method == HttpMethod.post) {
-    localCall = http.post(Uri.parse("http://$localServer$path"), headers: postHeaders, body: body);
+    localCall = http.post(localServer.replace(scheme:"http", path: path), headers: postHeaders, body: body);
   } else {
     throw UnsupportedError("This method is not currently supported");
   }
