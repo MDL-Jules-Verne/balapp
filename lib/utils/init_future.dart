@@ -62,8 +62,8 @@ class InitData {
 }
 
 enum AppMode {
-  registerTickets("registerTickets"),
-  verifyTickets("verifyTickets"),
+  buy("buy"),
+  bal("bal"),
   ;
 
   final String value;

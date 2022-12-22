@@ -33,9 +33,11 @@ class Settings extends StatelessWidget {
               Consumer<DatabaseHolder>(builder: (context, db, _) {
                   return GestureDetector(
                     onTap: () async {
-                      List? wsData = await showConnectDialog(context, true);
+                      List? wsData = await showConnectDialog(context, true, db.apiUrl.host);
                       if(wsData == null) return;
+                      db.niceWsClose();
                       db.resetDb(wsData[2], wsData[0], );
+
                     },
                     child: Row(
                       children: [

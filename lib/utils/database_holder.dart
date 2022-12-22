@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:balapp/utils/init_future.dart';
 import 'package:balapp/utils/ticket.dart';
 import 'package:balapp/widgets/dialogs/connect_dialog.dart';
 import 'package:flutter/foundation.dart';
@@ -19,8 +20,11 @@ class DatabaseHolder extends ChangeNotifier {
   late Uri apiUrl;
   String scannerName;
   late bool isWebsocketOpen;
+  bool ignoreNextDisconnect = false;
+  StreamSubscription? timeoutStreamSubscription;
   late List<Ticket> lastScanned;
   int retryLimit = 3;
+  AppMode appMode;
 
   // TODO: this ?
   // late List<Ticket> lastScannedGlobal;
@@ -30,7 +34,6 @@ class DatabaseHolder extends ChangeNotifier {
   ) {
     this.apiUrl = Uri.parse('$apiUrl');
     //todo this and constructor should not be separate code
-    //TODO: change this shit for a ping-pong
     ws = WebSocketChannel.connect(this.apiUrl);
     wsStream = ws.stream.asBroadcastStream();
     isWebsocketOpen = ws.closeCode == null;
@@ -51,11 +54,19 @@ class DatabaseHolder extends ChangeNotifier {
     }
     lastScanned = db.where((Ticket e) => e.whoEntered == scannerName).toList();
     lastScanned.sort((a, b) => b.timestamps["registered"].compareTo(a.timestamps["registered"]));
-    isWebsocketOpen = true;
+    notifyListeners();
+  }
+
+  void niceWsClose(){
+    ignoreNextDisconnect = true;
+    isWebsocketOpen = false;
+    timeoutStreamSubscription?.cancel();
+    ws.sink.close();
     notifyListeners();
   }
 
   void tryReconnect() async {
+    niceWsClose();
       List? wsData = await connectToServer(context, false, uri: apiUrl, setError: (e)=>print(e));
       if(wsData != null) resetDb(wsData[2], wsData[0]);
       // try again if this fails
@@ -69,35 +80,45 @@ class DatabaseHolder extends ChangeNotifier {
         ws.sink.add("testConnection");
       }
     }, onDone: () {
+      if(ignoreNextDisconnect == true) {
+        ignoreNextDisconnect = false;
+        return;
+      }
       print("done");
       isWebsocketOpen = false;
-      tryReconnect();
       notifyListeners();
+      tryReconnect();
     }, onError: (err) {
+      if(ignoreNextDisconnect == true) {
+        ignoreNextDisconnect = false;
+        return;
+      }
       print(err);
       isWebsocketOpen = false;
-      tryReconnect();
       notifyListeners();
+      tryReconnect();
       /*if(retryLimit > 0){
         ws = WebSocketChannel.connect(Uri.parse('ws://$apiUrl'));
         channel.sink.add('Hello!');
         retryLimit --;
       }*/
     });
-    wsStream.timeout(const Duration(milliseconds: kDebugMode? 12000: 1500), onTimeout: (_) {
-      ws.sink.close();
-      tryReconnect();
+    Stream timeoutStream = wsStream.timeout(const Duration(milliseconds: kDebugMode? 12000: 1500), onTimeout: (_) {
+      niceWsClose();
       print("clear3");
       isWebsocketOpen = false;
       notifyListeners();
+      tryReconnect();
     });
+    timeoutStreamSubscription = timeoutStream.listen((event) { });
+
   }
 
   Future<void> writeAllToDisk() async {
     await File("$dbPath/db.json").writeAsString(jsonEncode(db.map((e)=>e.toJson()).toList()));
   }
 
-  DatabaseHolder(List value, this.dbPath, this.apiUrl, this.scannerName, this.context) {
+  DatabaseHolder(List value, this.dbPath, this.apiUrl, this.scannerName, this.context, this.appMode) {
     ws = WebSocketChannel.connect(apiUrl);
     wsStream = ws.stream.asBroadcastStream();
     isWebsocketOpen = ws.closeCode == null;
@@ -115,6 +136,7 @@ class DatabaseHolder extends ChangeNotifier {
         salle: e["salle"],
       ));
     }
+    //TODO change this when AppMode == bal
     lastScanned = db.where((Ticket e) => e.whoEntered == scannerName).toList();
     lastScanned.sort((a, b) => b.timestamps["registered"].compareTo(a.timestamps["registered"]));
     writeAllToDisk();

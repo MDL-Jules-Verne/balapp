@@ -44,9 +44,10 @@ class CustomIconsMenu extends StatelessWidget {
                         icon: db.isWebsocketOpen ? Icons.wifi_tethering : Icons.wifi_tethering_off,
                         onTap: () async {
                           //[uri, appMode, db, channel, broadcast]
+                          db.ws.sink.close();
                           List? wsData = await showConnectDialog(context, true);
                           if(wsData == null) return;
-                          db.resetDb(wsData[2], wsData[0], );
+                          // db.resetDb(wsData[2], wsData[0], );
                           //TODO: process this to change connection (don't forget to redownload db and every field that could change)
                         }),
                     CustomIconButton(

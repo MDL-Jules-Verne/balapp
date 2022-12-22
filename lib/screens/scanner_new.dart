@@ -3,6 +3,8 @@ import 'dart:ui';
 
 import 'package:balapp/consts.dart';
 import 'package:balapp/utils/database_holder.dart';
+import 'package:balapp/utils/init_future.dart';
+import 'package:balapp/widgets/confirm_enter.dart';
 import 'package:balapp/widgets/custom_icons_menu.dart';
 import 'package:balapp/widgets/register_ticket.dart';
 import 'package:balapp/widgets/scan_history.dart';
@@ -55,7 +57,7 @@ class _ScannerNewState extends State<ScannerNew> {
     });
   }
 
-  void finishEnter() {
+  void dismiss() {
     scanControl.start();
     setState(() {
       currentTicket = null;
@@ -67,7 +69,7 @@ class _ScannerNewState extends State<ScannerNew> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DatabaseHolder>(builder: (context, db, _) {
+    return Consumer<DatabaseHolder>(builder: (context, DatabaseHolder db, _) {
       return Scaffold(
         backgroundColor: Colors.black,
         // appBar: PreferredSize(preferredSize: Size(0,0), child: AppBar(),),//CustomAppBar(scannerName: db.scannerName),
@@ -99,7 +101,7 @@ class _ScannerNewState extends State<ScannerNew> {
                         for (Offset i in offsets) {
                           if (maskRect.contains(i)) pointsInRect++;
                         }
-                        if (pointsInRect < 2) return;
+                        if (pointsInRect < 3) return;
 
                         setState(() {
                           currentTicket = code;
@@ -135,17 +137,32 @@ class _ScannerNewState extends State<ScannerNew> {
               Positioned(
                 bottom: 0,
                 child: ClipSmoothRect(
-                    radius: const SmoothBorderRadius.vertical(
-                      top: SmoothRadius(
-                        cornerRadius: 26,
-                        cornerSmoothing: 1,
-                      ),
+                  radius: const SmoothBorderRadius.vertical(
+                    top: SmoothRadius(
+                      cornerRadius: 26,
+                      cornerSmoothing: 1,
                     ),
-                    child: Container(
-                        color: kWhite, height: 35.h, width: 100.w, child: ScanHistory(tickets: db.lastScanned))),
+                  ),
+                  child: Container(
+                    color: kWhite,
+                    height: 35.h,
+                    width: 100.w,
+                    child: ScanHistory(tickets: db.lastScanned),
+                  ),
+                ),
               ),
-              if (currentTicket != null)
-                Positioned(bottom: 0, child: RegisterTicket(currentTicket!, db.apiUrl, finishEnter)),
+              // if(offsets.isNotEmpty)Positioned.fill(child: CustomPaint(size: Size(100.w, 100.h,), painter: QrCodePainter(offsets, squareColor),)),
+              if (db.appMode == AppMode.bal && currentTicket != null)
+                Positioned(
+                  bottom: 0,
+                  child: ConfirmEnterTicket(
+                    ticketId: currentTicket!,
+                    apiUrl: db.apiUrl,
+                    dismiss: dismiss,
+                  ),
+                ),
+              if (db.appMode == AppMode.buy && currentTicket != null)
+                Positioned(bottom: 0, child: RegisterTicket(currentTicket!, db.apiUrl, dismiss)),
             ],
           ),
         ),

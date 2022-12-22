@@ -6,20 +6,23 @@ import 'dart:io';
 
 import 'package:balapp/widgets/custom_text_input.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../utils/init_future.dart';
 
-Future<List?> showConnectDialog(BuildContext context, bool showSkipButton) {
-  return showDialog(context: context, builder: (_) => ConnectDialog(showSkipButton: showSkipButton));
+Future<List?> showConnectDialog(BuildContext context, bool showSkipButton, [String? presetIp]) {
+  return showDialog(context: context, builder: (_) => ConnectDialog(showSkipButton: showSkipButton, presetIp: presetIp));
 }
 
 class ConnectDialog extends StatefulWidget {
-  const ConnectDialog({Key? key, this.prefs, required this.showSkipButton}) : super(key: key);
+  const ConnectDialog({Key? key, this.prefs, required this.showSkipButton, required this.presetIp}) : super(key: key);
   final SharedPreferences? prefs;
   final bool showSkipButton;
+  final String? presetIp;
+
 
   @override
   State<ConnectDialog> createState() => _ConnectDialogState();
@@ -31,6 +34,12 @@ class _ConnectDialogState extends State<ConnectDialog> {
   int skipButtonTap = 0;
 
   @override
+  void initState(){
+    super.initState();
+    controller.text = widget.presetIp ?? "";
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text("Local connect"),
@@ -40,7 +49,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
           const Text("Enter IP address of local server"),
           CustomTextInput(
             controller: controller,
-            disableFormatter: true,
+            formatter: [FilteringTextInputFormatter.deny(" ") ],
             padding: const EdgeInsets.fromLTRB(8, 13, 12, 13),
           ),
           if (error != null)
@@ -145,6 +154,5 @@ Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setErr
     return await Navigator.push(context,  PageRouteBuilder(opaque: false,pageBuilder: (_, __, ___) => Container(),
   ),);
   }
-  if(!fromPopup) Navigator.pop(context);
   return null;
 }

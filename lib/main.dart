@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:balapp/consts.dart';
 import 'package:balapp/screens/home.dart';
 import 'package:balapp/screens/scanner_new.dart';
 import 'package:balapp/screens/settings.dart';
@@ -67,11 +68,19 @@ class _MyAppState extends State<MyApp> {
     }
     return Builder(
       builder: (context) {
-        DatabaseHolder db = DatabaseHolder(userData!.db, userData!.dbPath, userData!.apiUrl, userData!.scannerName, context);
-        return ChangeNotifierProvider<DatabaseHolder>.value(
-          value: db,
+        return ChangeNotifierProvider<DatabaseHolder>(
+          create: (_)=> DatabaseHolder(userData!.db, userData!.dbPath, userData!.apiUrl, userData!.scannerName, context, userData!.appMode),
           child: MaterialApp(
             theme: ThemeData(
+              elevatedButtonTheme: ElevatedButtonThemeData(
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: kWhite,
+                  backgroundColor: kPurple,
+                  minimumSize: Size(88,50),
+                  textStyle: bodyTitle,
+                  elevation: 4
+                )
+              ),
                 fontFamily: "Inter",
                 useMaterial3: true),
             initialRoute: "/home",

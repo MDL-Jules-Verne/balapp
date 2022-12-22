@@ -25,6 +25,8 @@ class _RegisterTicketState extends State<RegisterTicket> {
   TextEditingController firstNameController = TextEditingController();
   TextEditingController lastNameController = TextEditingController();
   String? error;
+  String? fatalError;
+  bool? ignoreError;
   Ticket? ticket;
   bool? isExternal;
 
@@ -58,17 +60,20 @@ class _RegisterTicketState extends State<RegisterTicket> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(31, 18, 33, 0),
           child: FutureBuilder(future: Future(() async {
+            if(ignoreError == true) return "done";
             Response result =
                 await httpCall("/ticketRegistration/ticketInfo/${widget.ticketId}", HttpMethod.get, widget.apiUrl);
 
             if (result.statusCode > 299 || result.statusCode < 200) {
               try {
                 String res = jsonDecode(result.body)["res"];
-                return {"error": true, "data": res.toString()};
+                fatalError = res.toString();
+                return "done";
               } catch (e,s) {
                 print(e);
                 print(s);
-                return {"error": true, "data": "Http code non successful nor parsable"};
+                fatalError = "Http code non successful nor parsable";
+                return "done";
               }
             }
             try {
@@ -77,23 +82,25 @@ class _RegisterTicketState extends State<RegisterTicket> {
 
               ticket = Ticket.fromJson(data["res"]);
               if(ticket!.prenom == "") {
-                return data;
+                return "done";
               } else {
-                return {"error": true, "data": "Ce ticket est déjà utilisé"};
+                fatalError = "Ce ticket est déjà utilisé";
+                return "done";
               }
             } catch (e, s) {
               print(e);
               print(s);
-              return {"error": true, "data": "Unexpected error (try/catch)"};
+              fatalError = "Unexpected error (try/catch)";
+              return "done";
             }
-          }), builder: (context, AsyncSnapshot<Map?> res) {
+          }), builder: (context, AsyncSnapshot<Object> res) {
             if (!res.hasData) {
               return const Center(
                 child: CircularProgressIndicator(),
               );
             }
 
-            if (res.data?["error"] == true) {
+            if (fatalError != null) {
               return Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -107,7 +114,7 @@ class _RegisterTicketState extends State<RegisterTicket> {
                       height: 50,
                     ),
                     Text(
-                      res.data?["data"] as String,
+                      fatalError!,
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(
@@ -118,6 +125,18 @@ class _RegisterTicketState extends State<RegisterTicket> {
                         widget.dismiss();
                       },
                       child: const Text("Ok")
+                    ),
+                    TextButton(
+                        onLongPress: (){
+                          setState(() {
+                            firstNameController.text = ticket?.prenom ?? "";
+                            lastNameController.text = ticket?.nom ?? "";
+                            fatalError = null;
+                            ignoreError = true;
+                          });
+                        },
+                        onPressed: () {  },
+                        child: const Text("Modifier quand même (appui long)")
                     )
                   ],
                 ),
