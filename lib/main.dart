@@ -35,6 +35,11 @@ class _MyAppState extends State<MyApp> {
   bool hasRunFirstTime = false;
   InitData? userData;
 
+  void restartApp(){
+    setState(() {
+
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,8 +74,9 @@ class _MyAppState extends State<MyApp> {
     return Builder(
       builder: (context) {
         return ChangeNotifierProvider<DatabaseHolder>(
-          create: (_)=> DatabaseHolder(userData!.db, userData!.dbPath, userData!.apiUrl, userData!.scannerName, context, userData!.appMode),
+          create: (_)=> DatabaseHolder(userData!.db, userData!.dbPath, userData!.apiUrl, userData!.scannerName, context, userData!.appMode, restartApp),
           child: MaterialApp(
+            debugShowCheckedModeBanner: false,
             theme: ThemeData(
               elevatedButtonTheme: ElevatedButtonThemeData(
                 style: ElevatedButton.styleFrom(
@@ -88,13 +94,19 @@ class _MyAppState extends State<MyApp> {
               "/scanner": (_) => Builder(
                 builder: (context) {
                   context.read<DatabaseHolder>().setContext(context);
-                  return const ScannerNew();
+                  return Banner(message: userData!.appMode.toString(),
+                  location: BannerLocation.bottomEnd,
+                  color: userData!.appMode == AppMode.buy ? kPurple : kRed,
+                  child: const ScannerNew());
                 }
               ),
               "/home": (_) => Builder(
                 builder: (context) {
                   context.read<DatabaseHolder>().setContext(context);
-                  return const Home();
+                  return Banner(message: userData!.appMode.toString(),
+                      location: BannerLocation.bottomEnd,
+                      color: userData!.appMode == AppMode.buy ? kPurple : kRed,
+                      child: const Home());
                 }
               ),
             },

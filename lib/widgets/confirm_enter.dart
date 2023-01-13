@@ -10,12 +10,13 @@ import 'package:http/http.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 class ConfirmEnterTicket extends StatefulWidget {
-  const ConfirmEnterTicket({Key? key, required this.ticketId, required this.apiUrl, required this.dismiss})
+  const ConfirmEnterTicket({Key? key, required this.ticketId, required this.apiUrl, required this.dismiss, required this.scannerName})
       : super(key: key);
 
   final Uri apiUrl;
   final void Function() dismiss;
   final String ticketId;
+  final String scannerName;
 
   @override
   State<ConfirmEnterTicket> createState() => _ConfirmEnterTicketState();
@@ -163,7 +164,7 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                               onPressed: () async {
                                                 Response result = await httpCall(
                                                     "/ticket/editEnterStatus", HttpMethod.post, widget.apiUrl,
-                                                    body: jsonEncode({"id": widget.ticketId, "setEnter": true}));
+                                                    body: jsonEncode({"id": widget.ticketId, "setEnter": true, "scannerName": widget.scannerName}));
                                                 if (result.statusCode >= 200 && result.statusCode < 299) {
                                                   widget.dismiss();
                                                 } else {
@@ -178,7 +179,7 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                         if (ticket != null && ticket!.nom != "" && ticket!.hasEntered == true)
                                           const Text(alreadyUsedString, style: body,),
                                         if (ticket != null && ticket!.nom != "" && ticket!.hasEntered == true)
-                                          SizedBox(height: 20,),
+                                          const SizedBox(height: 20,),
                                         if (ticket != null && ticket!.nom != "" && ticket!.hasEntered == true)
                                           ElevatedButton(
                                             onPressed: () {
@@ -191,7 +192,7 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                             onPressed: () async {
                                               Response result = await httpCall(
                                                   "/ticket/editEnterStatus", HttpMethod.post, widget.apiUrl,
-                                                  body: jsonEncode({"id": widget.ticketId, "setEnter": false}));
+                                                  body: jsonEncode({"id": widget.ticketId, "setEnter": false, "scannerName": widget.scannerName}));
                                               if (result.statusCode >= 200 && result.statusCode < 299) {
                                                 widget.dismiss();
                                               } else {

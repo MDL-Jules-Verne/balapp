@@ -8,10 +8,12 @@ import 'package:balapp/widgets/confirm_enter.dart';
 import 'package:balapp/widgets/custom_icons_menu.dart';
 import 'package:balapp/widgets/register_ticket.dart';
 import 'package:balapp/widgets/scan_history.dart';
+import 'package:balapp/widgets/search_mini.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:pixel_perfect/pixel_perfect.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
@@ -31,6 +33,7 @@ class _ScannerNewState extends State<ScannerNew> {
   double historySize = 36.3.h;
   double scannerSize = 100.h - 36.3.h + 35 /*Rounded corner size*/;
 
+  bool showSearchPanel = false;
   bool isLightOn = false;
 
   void setLightState(bool state) {
@@ -57,9 +60,10 @@ class _ScannerNewState extends State<ScannerNew> {
     });
   }
 
-  void dismiss() {
+  void dismissAll() {
     scanControl.start();
     setState(() {
+      showSearchPanel = false;
       currentTicket = null;
     });
     Future.delayed(const Duration(milliseconds: 1100), () {
@@ -67,103 +71,144 @@ class _ScannerNewState extends State<ScannerNew> {
     });
   }
 
+  void dismissSearch() {
+    if (currentTicket == null) {
+      dismissAll();
+    } else {
+      setState(() {
+        showSearchPanel = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<DatabaseHolder>(builder: (context, DatabaseHolder db, _) {
-      return Scaffold(
-        backgroundColor: Colors.black,
-        // appBar: PreferredSize(preferredSize: Size(0,0), child: AppBar(),),//CustomAppBar(scannerName: db.scannerName),
-        body: SizedBox(
-          // width: 100.w,
-          height: 100.h,
-          child: Stack(
-            children: [
-              if (isCameraOpen == true || !kDebugMode)
-                SizedBox(
-                  height: scannerSize,
-                  child: MobileScanner(
-                      controller: scanControl,
-                      allowDuplicates: true,
-                      onDetect: (barcode, args) async {
-                        if (lastScan.add(const Duration(seconds: 2)).isAfter(DateTime.now())) return;
-                        if (barcode.rawValue == null) return;
+      return PixelPerfect(
+        assetPath: "assets/Scan Search.png",
 
-                        final String code = barcode.rawValue!;
-                        if (code.runtimeType != String || code.length != kCodesLength) {
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(const SnackBar(content: Text("Impossible de lire le qrCode")));
-                          return;
-                        }
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          // appBar: PreferredSize(preferredSize: Size(0,0), child: AppBar(),),//CustomAppBar(scannerName: db.scannerName),
+          body: SizedBox(
+            // width: 100.w,
+            height: 100.h,
+            child: Stack(
+              children: [
+                if (isCameraOpen == true || !kDebugMode)
+                  SizedBox(
+                    height: scannerSize,
+                    child: MobileScanner(
+                        controller: scanControl,
+                        allowDuplicates: true,
+                        onDetect: (barcode, args) async {
+                          if (lastScan.add(const Duration(seconds: 2)).isAfter(DateTime.now())) return;
+                          if (barcode.rawValue == null) return;
 
-                        lastScan = DateTime.now();
-                        List<Offset> offsets = barcode.corners!.map((e) => e.translate(-40, -40)).toList();
-                        int pointsInRect = 0;
-                        for (Offset i in offsets) {
-                          if (maskRect.contains(i)) pointsInRect++;
-                        }
-                        if (pointsInRect < 3) return;
+                          final String code = barcode.rawValue!;
+                          if (code.runtimeType != String || code.length != kCodesLength) {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(content: Text("Impossible de lire le qrCode")));
+                            return;
+                          }
 
-                        setState(() {
-                          currentTicket = code;
-                          scanControl.stop();
-                        });
-                      }),
-                )
-              else
-                Container(
-                  height: scannerSize,
-                  width: 100.w,
-                  color: kBlack,
-                  child: Center(
-                      child: ElevatedButton(
-                    onPressed: () {
-                      scanControl.start();
-                      setState(() {
-                        isCameraOpen = true;
-                      });
-                    },
-                    child: Text("Activate camera"),
-                  )),
-                ),
-              ScanMask(
-                maskKey: maskKey,
-                scannerSize: scannerSize,
-              ),
-              CustomIconsMenu(
-                setLightState: setLightState,
-                db: db,
-                scanControl: scanControl,
-              ),
-              Positioned(
-                bottom: 0,
-                child: ClipSmoothRect(
-                  radius: const SmoothBorderRadius.vertical(
-                    top: SmoothRadius(
-                      cornerRadius: 26,
-                      cornerSmoothing: 1,
-                    ),
-                  ),
-                  child: Container(
-                    color: kWhite,
-                    height: 35.h,
+                          lastScan = DateTime.now();
+                          List<Offset> offsets = barcode.corners!.map((e) => e.translate(-40, -40)).toList();
+                          int pointsInRect = 0;
+                          for (Offset i in offsets) {
+                            if (maskRect.contains(i)) pointsInRect++;
+                          }
+                          if (pointsInRect < 3) return;
+
+                          setState(() {
+                            currentTicket = code;
+                            scanControl.stop();
+                          });
+                        }),
+                  )
+                else
+                  Container(
+                    height: scannerSize,
                     width: 100.w,
-                    child: ScanHistory(tickets: db.lastScanned),
+                    color: kBlack,
+                    child: Center(
+                        child: ElevatedButton(
+                      onPressed: () {
+                        scanControl.start();
+                        setState(() {
+                          isCameraOpen = true;
+                        });
+                      },
+                      child: Text("Activate camera"),
+                    )),
                   ),
+                ScanMask(
+                  maskKey: maskKey,
+                  scannerSize: scannerSize,
                 ),
-              ),
-              // if(offsets.isNotEmpty)Positioned.fill(child: CustomPaint(size: Size(100.w, 100.h,), painter: QrCodePainter(offsets, squareColor),)),
-              if (db.appMode == AppMode.bal && currentTicket != null)
+                CustomIconsMenu(
+                  setLightState: setLightState,
+                  db: db,
+                  scanControl: scanControl,
+                  showSearchPanel: () {
+                    if (showSearchPanel == true)
+                      dismissSearch();
+                    else {
+                      setState(() {
+                        showSearchPanel = true;
+                        scanControl.stop();
+                      });
+                    }
+                  },
+                ),
+
                 Positioned(
                   bottom: 0,
-                  child: ConfirmEnterTicket(
-                    ticketId: currentTicket!,
-                    apiUrl: db.apiUrl,
-                    dismiss: dismiss,
+                  child: ClipSmoothRect(
+                    radius: const SmoothBorderRadius.vertical(
+                      top: SmoothRadius(
+                        cornerRadius: 26,
+                        cornerSmoothing: 1,
+                      ),
+                    ),
+                    child: Container(
+                      color: kWhite,
+                      height: 35.h,
+                      width: 100.w,
+                      child: ScanHistory(tickets: db.lastScanned),
+                    ),
                   ),
                 ),
-              if (db.appMode == AppMode.buy && currentTicket != null)
-                Positioned(bottom: 0, child: RegisterTicket(currentTicket!, db.apiUrl, dismiss)),
-            ],
+                // if(offsets.isNotEmpty)Positioned.fill(child: CustomPaint(size: Size(100.w, 100.h,), painter: QrCodePainter(offsets, squareColor),)),
+                if (db.appMode == AppMode.bal && currentTicket != null)
+                  Positioned(
+                    bottom: 0,
+                    child: ConfirmEnterTicket(
+                      ticketId: currentTicket!,
+                      apiUrl: db.apiUrl,
+                      dismiss: dismissAll,
+                      scannerName: db.scannerName,
+                    ),
+                  ),
+                if (db.appMode == AppMode.buy && currentTicket != null)
+                  Positioned(bottom: 0, child: RegisterTicket(currentTicket!, db.apiUrl, dismissAll)),
+                if (showSearchPanel)
+                  Positioned.fill(
+                    child: GestureDetector(
+                      onTap: () {
+                        dismissSearch();
+                      },
+                    ),
+                  ),
+                if (showSearchPanel)
+                  Positioned(
+                    bottom: 0,
+                    child: SearchMini(
+                      dismiss: dismissSearch,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       );

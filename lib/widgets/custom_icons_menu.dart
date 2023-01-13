@@ -9,10 +9,11 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 import 'custom_icon_button.dart';
 
 class CustomIconsMenu extends StatelessWidget {
-  const CustomIconsMenu({Key? key, required this.db, required this.scanControl, required this.setLightState}) : super(key: key);
+  const CustomIconsMenu({Key? key, required this.db, required this.scanControl, required this.setLightState, required this.showSearchPanel}) : super(key: key);
   final DatabaseHolder db;
   final MobileScannerController scanControl;
   final void Function(bool) setLightState;
+  final void Function() showSearchPanel;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +52,9 @@ class CustomIconsMenu extends StatelessWidget {
                           //TODO: process this to change connection (don't forget to redownload db and every field that could change)
                         }),
                     CustomIconButton(
-                        paddingSizeDelta: - 8, icon: Icons.search, onTap: () {}),
+                        paddingSizeDelta: - 8, icon: Icons.search, onTap: () {
+                          showSearchPanel();
+                    }),
                     ValueListenableBuilder(
                         valueListenable: scanControl.torchState,
                         builder: (context, state, _) {

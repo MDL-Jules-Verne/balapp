@@ -25,15 +25,18 @@ class DatabaseHolder extends ChangeNotifier {
   late List<Ticket> lastScanned;
   int retryLimit = 3;
   AppMode appMode;
+  void Function() restartApp;
 
   // TODO: this ?
   // late List<Ticket> lastScannedGlobal;
   void resetDb(
     List value,
     Uri apiUrl,
+      [bool isFromConstructor = false]
   ) {
-    this.apiUrl = Uri.parse('$apiUrl');
-    //todo this and constructor should not be separate code
+    if(!isFromConstructor) {
+      this.apiUrl = apiUrl;
+    }
     ws = WebSocketChannel.connect(this.apiUrl);
     wsStream = ws.stream.asBroadcastStream();
     isWebsocketOpen = ws.closeCode == null;
@@ -47,14 +50,20 @@ class DatabaseHolder extends ChangeNotifier {
         id: e["id"],
         hasEntered: e["hasEntered"],
         whoEntered: e["whoEntered"],
+        whoScanned: e["whoScanned"],
         couleur: e["couleur"],
         externe: e["externe"],
         salle: e["salle"],
       ));
     }
-    lastScanned = db.where((Ticket e) => e.whoEntered == scannerName).toList();
-    lastScanned.sort((a, b) => b.timestamps["registered"].compareTo(a.timestamps["registered"]));
-    notifyListeners();
+    if(appMode == AppMode.bal){
+      lastScanned = db.where((Ticket e) => e.whoScanned == scannerName).toList();
+      lastScanned.sort((a, b) => b.timestamps["entered"].compareTo(a.timestamps["entered"]));
+    }else if(appMode == AppMode.buy){
+      lastScanned = db.where((Ticket e) => e.whoEntered == scannerName).toList();
+      lastScanned.sort((a, b) => b.timestamps["registered"].compareTo(a.timestamps["registered"]));
+    }
+    writeAllToDisk();
   }
 
   void niceWsClose(){
@@ -118,27 +127,7 @@ class DatabaseHolder extends ChangeNotifier {
     await File("$dbPath/db.json").writeAsString(jsonEncode(db.map((e)=>e.toJson()).toList()));
   }
 
-  DatabaseHolder(List value, this.dbPath, this.apiUrl, this.scannerName, this.context, this.appMode) {
-    ws = WebSocketChannel.connect(apiUrl);
-    wsStream = ws.stream.asBroadcastStream();
-    isWebsocketOpen = ws.closeCode == null;
-    listenToStream();
-    for (var e in value) {
-      db.add(Ticket(
-        prenom: e["prenom"],
-        nom: e["nom"],
-        timestamps: e["timestamps"],
-        id: e["id"],
-        hasEntered: e["hasEntered"],
-        whoEntered: e["whoEntered"],
-        couleur: e["couleur"],
-        externe: e["externe"],
-        salle: e["salle"],
-      ));
-    }
-    //TODO change this when AppMode == bal
-    lastScanned = db.where((Ticket e) => e.whoEntered == scannerName).toList();
-    lastScanned.sort((a, b) => b.timestamps["registered"].compareTo(a.timestamps["registered"]));
-    writeAllToDisk();
+  DatabaseHolder(List value, this.dbPath, this.apiUrl, this.scannerName, this.context, this.appMode, this.restartApp) {
+    resetDb(value, apiUrl, true);
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:balapp/consts.dart';
 import 'package:balapp/widgets/dialogs/connect_dialog.dart';
 import 'package:balapp/widgets/dialogs/name_dialog.dart';
 import 'package:flutter/cupertino.dart';
@@ -66,9 +67,13 @@ enum AppMode {
   bal("bal"),
   ;
 
+  const AppMode(this.value);
   final String value;
 
-  const AppMode(this.value);
+  @override
+  String toString(){
+    return toFirstCharUpperCase("Mode: $value");
+  }
 
   static AppMode? getByString(String str) {
     for (AppMode status in AppMode.values) {

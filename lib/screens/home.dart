@@ -3,7 +3,6 @@ import 'package:balapp/screens/settings.dart';
 import 'package:balapp/widgets/custom_icon_button.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
-import 'package:pixel_perfect/pixel_perfect.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -44,20 +43,13 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return PixelPerfect(
-      assetPath: 'assets/settings.png',
-      scale: 1.03,
-      initBottom: 20,
-      offset: const Offset(-24, 27),
-      initOpacity: 0,
-      child: Scaffold(
-          backgroundColor: kWhite,
-          body: selectedButton == 1 ? Container() : const Settings(),
-          bottomNavigationBar: BottomNavbar(
-            buttons: buttons,
-            selectedButton: selectedButton,
-          )),
-    );
+    return Scaffold(
+        backgroundColor: kWhite,
+        body: selectedButton == 1 ? Container() : const Settings(),
+        bottomNavigationBar: BottomNavbar(
+          buttons: buttons,
+          selectedButton: selectedButton,
+        ));
   }
 }
 

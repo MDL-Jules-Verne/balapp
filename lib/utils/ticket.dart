@@ -8,6 +8,7 @@ class Ticket {
   late bool hasEntered;
   late final int salle;
   late Map timestamps;
+  late String whoScanned;
 
   @override
   String toString(){
@@ -24,6 +25,7 @@ class Ticket {
       "externe": externe,
       "hasEntered": hasEntered,
       "whoEntered": whoEntered,
+      "whoScanned": whoScanned,
       "timestamps": timestamps
     };
   }
@@ -32,6 +34,7 @@ class Ticket {
     externe    = json["externe"] ?? false;
     id         = json["id"];
     whoEntered = json["whoEntered"] ?? "";
+    whoScanned = json["whoScanned"] ?? "";
     couleur    = json["couleur"];
     prenom     = json["prenom"] ?? "";
     nom        = json["nom"] ?? "";
@@ -48,6 +51,7 @@ class Ticket {
     externe = ticket.externe;
     id = ticket.id;
     whoEntered = ticket.whoEntered;
+    whoScanned = ticket.whoScanned;
     couleur = ticket.couleur;
     prenom = ticket.prenom;
     nom = ticket.nom;
@@ -58,6 +62,7 @@ class Ticket {
 
   Ticket(
       {required this.whoEntered,
+      required this.whoScanned,
         required this.externe,
         required this.id,
         required this.couleur,
@@ -77,6 +82,7 @@ class TicketWithIndex extends Ticket {
   TicketWithIndex(
       {required super.whoEntered,
         required super.externe,
+        required super.whoScanned,
         required super.id,
         required super.couleur,
         required super.prenom,

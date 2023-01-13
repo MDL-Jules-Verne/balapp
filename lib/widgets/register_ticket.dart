@@ -131,6 +131,7 @@ class _RegisterTicketState extends State<RegisterTicket> {
                           setState(() {
                             firstNameController.text = ticket?.prenom ?? "";
                             lastNameController.text = ticket?.nom ?? "";
+                            isExternal = ticket?.externe;
                             fatalError = null;
                             ignoreError = true;
                           });
@@ -247,16 +248,22 @@ class _RegisterTicketState extends State<RegisterTicket> {
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: !isReady ? null : () async {
+                                DatabaseHolder db = context.read<DatabaseHolder>();
                                 ticket!.prenom = firstNameController.text;
                                 ticket!.nom = lastNameController.text;
                                 ticket!.externe = isExternal!;
-                                ticket!.whoEntered = context.read<DatabaseHolder>().scannerName;
+                                ticket!.whoEntered = db.scannerName;
                                 Response result = await httpCall("/ticketRegistration/enterTicket/", HttpMethod.post, widget.apiUrl, body: jsonEncode(ticket!.toJson()));
                                 if (result.statusCode > 299 || result.statusCode < 200) {
                                   setState(() {
                                     error = result.body;
                                   });
                                 } else {
+                                  int duplicateIndex = db.lastScanned.indexWhere((Ticket element) => element.id == ticket!.id);
+                                  if(duplicateIndex != -1){
+                                    db.lastScanned.removeAt(duplicateIndex);
+                                  }
+                                  db.lastScanned.insert(0, ticket!);
                                   widget.dismiss();
                                 }
                               },
