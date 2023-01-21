@@ -111,6 +111,8 @@ class _ConnectDialogState extends State<ConnectDialog> {
 }
 
 Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setError, required Uri uri}) async {
+
+
   WebSocketChannel channel;
   try{
       channel = WebSocketChannel.connect(uri);
@@ -147,6 +149,8 @@ Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setErr
     }
       sub?.cancel();
       channel.sink.close();
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString("serverUrl", uri.toString());
       Navigator.pop(context, [uri, appMode, db, channel, broadcast]);
   });
   channel.sink.add('hello');

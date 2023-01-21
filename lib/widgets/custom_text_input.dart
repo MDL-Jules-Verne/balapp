@@ -9,10 +9,11 @@ class CustomTextInput extends StatelessWidget {
       this.formatter,
       this.callback,
       this.padding = const EdgeInsets.fromLTRB(8, 24, 12, 13),
-      this.showLabelText = true})
+      this.showLabelText = true, this.fontSize = 20})
       : super(key: key);
   final TextEditingController controller;
   final String? label;
+  final double fontSize;
   final List<TextInputFormatter>? formatter;
   final bool showLabelText;
   final void Function(String?)? callback;
@@ -22,7 +23,6 @@ class CustomTextInput extends StatelessWidget {
   Widget build(BuildContext context) {
     List<TextInputFormatter>? formatterNew = formatter;
     formatterNew ??= [FilteringTextInputFormatter.allow(RegExp("[a-zÀ-ÿ]|-|_|,", caseSensitive: false))];
-    print(label);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,7 +50,7 @@ class CustomTextInput extends StatelessWidget {
             contentPadding: padding,
             hintText: label,
           ),
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w500),
           controller: controller,
         ),
       ],

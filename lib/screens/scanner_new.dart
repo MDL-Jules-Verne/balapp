@@ -31,8 +31,13 @@ class _ScannerNewState extends State<ScannerNew> {
   GlobalKey maskKey = GlobalKey();
   Rect maskRect = Rect.fromLTWH(0, 0, 0, 0);
   double historySize = 36.3.h;
-  double scannerSize = 100.h - 36.3.h + 35 /*Rounded corner size*/;
+  SearchBy? overrideSearchBy;
+  String? overrideSearchString;
+  double scannerSize = 100.h - 36.3.h + 35
 
+  /*Rounded corner size*/;
+
+  bool isTrulyScanning = true;
   bool showSearchPanel = false;
   bool isLightOn = false;
 
@@ -53,10 +58,11 @@ class _ScannerNewState extends State<ScannerNew> {
       RenderBox box = context.findRenderObject() as RenderBox;
 
       Offset offset = box.localToGlobal(Offset.zero);
-      maskRect = Rect.fromLTWH(offset.dx, offset.dy, box.size.width, box.size.height);
+      maskRect =
+          Rect.fromLTWH(offset.dx, offset.dy, box.size.width, box.size.height);
     });
     Future.delayed(const Duration(milliseconds: 1000), () {
-      scanControl.stop();
+      if (kDebugMode) scanControl.stop();
     });
   }
 
@@ -65,6 +71,7 @@ class _ScannerNewState extends State<ScannerNew> {
     setState(() {
       showSearchPanel = false;
       currentTicket = null;
+      isTrulyScanning = true;
     });
     Future.delayed(const Duration(milliseconds: 1100), () {
       if (isLightOn) scanControl.toggleTorch();
@@ -72,143 +79,217 @@ class _ScannerNewState extends State<ScannerNew> {
   }
 
   void dismissSearch() {
+    isTrulyScanning = true;
     if (currentTicket == null) {
       dismissAll();
     } else {
       setState(() {
+        isTrulyScanning = true;
         showSearchPanel = false;
       });
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<DatabaseHolder>(builder: (context, DatabaseHolder db, _) {
-      return PixelPerfect(
-        assetPath: "assets/Scan Search.png",
+      return Scaffold(
+        backgroundColor: Colors.black,
+        // appBar: PreferredSize(preferredSize: Size(0,0), child: AppBar(),),//CustomAppBar(scannerName: db.scannerName),
+        body: SizedBox(
+          // width: 100.w,
+          height: 100.h,
+          child: Stack(
+            children: [
+              if (isCameraOpen == true || !kDebugMode)
+                SizedBox(
+                  height: scannerSize,
+                  child: MobileScanner(
+                      controller: scanControl,
+                      allowDuplicates: true,
+                      onDetect: (barcode, args) async {
+                        if (lastScan.add(const Duration(milliseconds: 600))
+                            .isAfter(DateTime.now())) return;
+                        if (barcode.rawValue == null) return;
 
-        child: Scaffold(
-          backgroundColor: Colors.black,
-          // appBar: PreferredSize(preferredSize: Size(0,0), child: AppBar(),),//CustomAppBar(scannerName: db.scannerName),
-          body: SizedBox(
-            // width: 100.w,
-            height: 100.h,
-            child: Stack(
-              children: [
-                if (isCameraOpen == true || !kDebugMode)
-                  SizedBox(
-                    height: scannerSize,
-                    child: MobileScanner(
-                        controller: scanControl,
-                        allowDuplicates: true,
-                        onDetect: (barcode, args) async {
-                          if (lastScan.add(const Duration(seconds: 2)).isAfter(DateTime.now())) return;
-                          if (barcode.rawValue == null) return;
+                        final String code = barcode.rawValue!;
+                        lastScan = DateTime.now();
+                        if (code.runtimeType != String ||
+                            code.length != kCodesLength) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(
+                              content: Text("Impossible de lire le qrCode")));
+                          return;
+                        }
 
-                          final String code = barcode.rawValue!;
-                          if (code.runtimeType != String || code.length != kCodesLength) {
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(content: Text("Impossible de lire le qrCode")));
-                            return;
-                          }
-
-                          lastScan = DateTime.now();
-                          List<Offset> offsets = barcode.corners!.map((e) => e.translate(-40, -40)).toList();
-                          int pointsInRect = 0;
-                          for (Offset i in offsets) {
-                            if (maskRect.contains(i)) pointsInRect++;
-                          }
-                          if (pointsInRect < 3) return;
-
+                        List<Offset> offsets = barcode.corners!.map((e) =>
+                            e.translate(-40, -40)).toList();
+                        int pointsInRect = 0;
+                        for (Offset i in offsets) {
+                          if (maskRect.contains(i)) pointsInRect++;
+                        }
+                        if (pointsInRect < 3) return;
+                        //TODO: handle what to do with ticket here (e.g. launch a page with ticket info)
+                        if (isTrulyScanning == false)  {
+                          if(code == overrideSearchString) return;
+                          setState((){
+                            overrideSearchBy = SearchBy.id;
+                            overrideSearchString = code;
+                          });
+                        } else {
                           setState(() {
                             currentTicket = code;
                             scanControl.stop();
                           });
-                        }),
-                  )
-                else
-                  Container(
-                    height: scannerSize,
-                    width: 100.w,
-                    color: kBlack,
-                    child: Center(
-                        child: ElevatedButton(
-                      onPressed: () {
-                        scanControl.start();
-                        setState(() {
-                          isCameraOpen = true;
-                        });
-                      },
-                      child: Text("Activate camera"),
-                    )),
-                  ),
-                ScanMask(
-                  maskKey: maskKey,
-                  scannerSize: scannerSize,
+                        }
+                      }),
+                )
+              else
+                Container(
+                  height: scannerSize,
+                  width: 100.w,
+                  color: kBlack,
+                  child: Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          scanControl.start();
+                          setState(() {
+                            isCameraOpen = true;
+                          });
+                        },
+                        child: Text("Activate camera"),
+                      )),
                 ),
-                CustomIconsMenu(
-                  setLightState: setLightState,
-                  db: db,
-                  scanControl: scanControl,
-                  showSearchPanel: () {
-                    if (showSearchPanel == true)
-                      dismissSearch();
-                    else {
-                      setState(() {
-                        showSearchPanel = true;
-                        scanControl.stop();
-                      });
-                    }
-                  },
-                ),
+              ScanMask(
+                maskKey: maskKey,
+                scannerSize: scannerSize,
+              ),
+              CustomIconsMenu(
+                setLightState: setLightState,
+                db: db,
+                scanControl: scanControl,
+                showSearchPanel: () {
+                  if (showSearchPanel == true) {
+                    dismissSearch();
+                  } else {
+                    setState(() {
+                      showSearchPanel = true;
+                      scanControl.stop();
+                    });
+                  }
+                },
+              ),
 
+              Positioned(
+                bottom: 0,
+                child: ClipSmoothRect(
+                  radius: const SmoothBorderRadius.vertical(
+                    top: SmoothRadius(
+                      cornerRadius: 26,
+                      cornerSmoothing: 1,
+                    ),
+                  ),
+                  child: Container(
+                    color: kWhite,
+                    height: 35.h,
+                    width: 100.w,
+                    child: ScanHistory(tickets: db.lastScanned),
+                  ),
+                ),
+              ),
+              // if(offsets.isNotEmpty)Positioned.fill(child: CustomPaint(size: Size(100.w, 100.h,), painter: QrCodePainter(offsets, squareColor),)),
+              if (db.appMode == AppMode.bal && currentTicket != null)
                 Positioned(
                   bottom: 0,
-                  child: ClipSmoothRect(
-                    radius: const SmoothBorderRadius.vertical(
-                      top: SmoothRadius(
-                        cornerRadius: 26,
-                        cornerSmoothing: 1,
-                      ),
-                    ),
-                    child: Container(
-                      color: kWhite,
-                      height: 35.h,
-                      width: 100.w,
-                      child: ScanHistory(tickets: db.lastScanned),
-                    ),
+                  child: ConfirmEnterTicket(
+                    ticketId: currentTicket!,
+                    apiUrl: db.apiUrl,
+                    dismiss: dismissAll,
+                    scannerName: db.scannerName,
                   ),
                 ),
-                // if(offsets.isNotEmpty)Positioned.fill(child: CustomPaint(size: Size(100.w, 100.h,), painter: QrCodePainter(offsets, squareColor),)),
-                if (db.appMode == AppMode.bal && currentTicket != null)
-                  Positioned(
-                    bottom: 0,
-                    child: ConfirmEnterTicket(
-                      ticketId: currentTicket!,
-                      apiUrl: db.apiUrl,
-                      dismiss: dismissAll,
-                      scannerName: db.scannerName,
-                    ),
+              if (db.appMode == AppMode.buy && currentTicket != null)
+                Positioned(bottom: 0,
+                    child: RegisterTicket(
+                        currentTicket!, db.apiUrl, dismissAll)),
+              if (showSearchPanel)
+                Positioned.fill(
+                  top: 13.h,
+                  child: GestureDetector(
+                    onTap: () {
+                      dismissSearch();
+                    },
                   ),
-                if (db.appMode == AppMode.buy && currentTicket != null)
-                  Positioned(bottom: 0, child: RegisterTicket(currentTicket!, db.apiUrl, dismissAll)),
-                if (showSearchPanel)
-                  Positioned.fill(
-                    child: GestureDetector(
-                      onTap: () {
-                        dismissSearch();
-                      },
-                    ),
+                ),
+              if (showSearchPanel)
+                Positioned(
+                  bottom: 0,
+                  child: SearchMini(
+                    searchBy: overrideSearchBy,
+                    searchText: overrideSearchString,
+                    dismiss: dismissSearch,
                   ),
-                if (showSearchPanel)
-                  Positioned(
-                    bottom: 0,
-                    child: SearchMini(
-                      dismiss: dismissSearch,
-                    ),
+                ),
+              if(!(showSearchPanel && isTrulyScanning) && currentTicket == null)Positioned(
+                left: 18.w,
+                right: 18.w,
+                top: scannerSize/2 + 145 + 20,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 2.5.w, vertical: 3),
+                  decoration: BoxDecoration(
+                      border: Border.all(color: kBlack, width: 1),
+                      borderRadius: BorderRadius.circular(14),
+                      color: Colors.black38
                   ),
-              ],
-            ),
+                  child:Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              MaterialButton(
+                                minWidth: 27.5.w,
+                                elevation: 0,
+                                color: Colors.black38,
+                                disabledColor: Colors.black87,
+                                onPressed: isTrulyScanning == false ? () {
+                                  dismissSearch();
+                                  setState(() {
+                                    isTrulyScanning = true;
+                                  });
+                                } : null,
+                                padding: EdgeInsets.fromLTRB(
+                                    6.w, 0.75.h, 6.w, 0.5.h),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14.0),
+                                ),
+                                child: Text(
+                                    "Scan",
+                                    style: body.apply(color: kWhite)
+                                ),
+                              ),
+                              SizedBox(width: 2.5.w),
+                              MaterialButton(
+                                minWidth: 27.5.w,
+                                elevation: 0,
+                                color: Colors.black38,
+                                disabledColor: Colors.black,
+                                onPressed: isTrulyScanning == true ? () {
+                                  setState(() {
+                                    showSearchPanel = true;
+                                    isTrulyScanning = false;
+                                  });
+
+                                } : null,
+                                padding: EdgeInsets.fromLTRB(
+                                    6.w, 0.75.h, 6.w, 0.5.h),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14.0),
+                                ),
+                                child: Text(
+                                    "Search", style: body.apply(color: kWhite)),
+                              ),
+                            ]
+                        )
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -217,7 +298,8 @@ class _ScannerNewState extends State<ScannerNew> {
 }
 
 class ScanMask extends StatelessWidget {
-  const ScanMask({Key? key, required this.maskKey, required this.scannerSize}) : super(key: key);
+  const ScanMask({Key? key, required this.maskKey, required this.scannerSize})
+      : super(key: key);
   final GlobalKey maskKey;
   final double scannerSize;
 
@@ -227,8 +309,8 @@ class ScanMask extends StatelessWidget {
       child: IgnorePointer(
         child: BackdropFilter(
           filter: ImageFilter.blur(
-            sigmaX: 5.0,
-            sigmaY: 5.0,
+            sigmaX: 6.0,
+            sigmaY: 6.0,
           ),
           child: Container(
             color: Colors.white.withOpacity(0.23),

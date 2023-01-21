@@ -44,7 +44,6 @@ Future<InitData?> initApp(
     data = await showConnectDialog(context, fileExists);
   }
   //TODO: handle skip
-  prefs.setString("serverUrl", data[0].toString());
   return InitData(scannerName: name, db: data[2], appMode: data[1], dbPath: path, apiUrl: data[0]);
 }
 

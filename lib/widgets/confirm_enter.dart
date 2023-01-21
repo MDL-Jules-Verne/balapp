@@ -3,10 +3,12 @@ import 'dart:convert';
 
 import 'package:balapp/consts.dart';
 import 'package:balapp/utils/call_apis.dart';
+import 'package:balapp/utils/database_holder.dart';
 import 'package:balapp/utils/ticket.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 class ConfirmEnterTicket extends StatefulWidget {
@@ -59,9 +61,18 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
             fatalError = ticketDecode["res"];
           });
         }
-        setState(() {
-          ticket = Ticket.fromJson(ticketDecode["res"]);
-        });
+        ticket = Ticket.fromJson(ticketDecode["res"]);
+        if(ticket?.nom == "") {
+          setState(() {
+            fatalError = "Ticket non vendu";
+            fatalErrorDetails = "Ce ticket n'a pas été vendu et n'est donc pas valide";
+          });
+        }else {
+          setState(() {
+
+          });
+        }
+
       } else {
         setState(() {
           fatalError = result.statusCode.toString();
@@ -70,7 +81,6 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
       }
     });
   }
-
   @override
   Widget build(BuildContext context) {
     return ClipSmoothRect(
@@ -166,7 +176,15 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                                     "/ticket/editEnterStatus", HttpMethod.post, widget.apiUrl,
                                                     body: jsonEncode({"id": widget.ticketId, "setEnter": true, "scannerName": widget.scannerName}));
                                                 if (result.statusCode >= 200 && result.statusCode < 299) {
+                                                  // ignore: use_build_context_synchronously
+                                                  DatabaseHolder db = context.read<DatabaseHolder>();
+                                                  int duplicateIndex = db.lastScanned.indexWhere((Ticket element) => element.id == ticket!.id);
+                                                  if(duplicateIndex != -1){
+                                                    db.lastScanned.removeAt(duplicateIndex);
+                                                  }
+                                                  db.lastScanned.insert(0, ticket!);
                                                   widget.dismiss();
+
                                                 } else {
                                                   setState(() {
                                                     error = result.body;
@@ -189,19 +207,26 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                           ),
                                         if (ticket != null && ticket!.nom != "" && ticket!.hasEntered == true)
                                           TextButton(
-                                            onPressed: () async {
+                                            onPressed: (){},
+                                            onLongPress: () async {
                                               Response result = await httpCall(
                                                   "/ticket/editEnterStatus", HttpMethod.post, widget.apiUrl,
-                                                  body: jsonEncode({"id": widget.ticketId, "setEnter": false, "scannerName": widget.scannerName}));
+                                                  body: jsonEncode({"id": widget.ticketId, "setEnter": false, "scannerName": ""}));
                                               if (result.statusCode >= 200 && result.statusCode < 299) {
+                                                // ignore: use_build_context_synchronously
+                                                DatabaseHolder db = context.read<DatabaseHolder>();
                                                 widget.dismiss();
+                                                int duplicateIndex = db.lastScanned.indexWhere((Ticket element) => element.id == ticket!.id);
+                                                if(duplicateIndex != -1){
+                                                  db.lastScanned.removeAt(duplicateIndex);
+                                                }
                                               } else {
                                                 setState(() {
                                                   error = result.body;
                                                 });
                                               }
                                             },
-                                            child: const Text("Rendre le ticket disponible"),
+                                            child: const Text("Rendre le ticket disponible (appui long)"),
                                           ),
                                         if (fatalError != null)
                                           Text(

@@ -28,10 +28,10 @@ class TicketDetails extends StatelessWidget {
                   cornerSmoothing: 1,
                 ),
               ),
-              color: ticket.externe ? kPurple : kGreen),
+              color:  ticket.prenom == "" ? Colors.grey : ticket.externe ? kPurple : kGreen),
           child: Center(
             child: Text(
-              ticket.externe ? "EXT" : "INT",
+              ticket.prenom == "" ? "?" : ticket.externe ? "EXT" : "INT",
               style: const TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w800,
@@ -52,12 +52,12 @@ class TicketDetails extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                ticket.nom.toUpperCase(),
+                ticket.nom.isEmpty ? "Pas enregistré" : ticket.nom.toUpperCase(),
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                toFirstCharUpperCase(ticket.prenom),
+                ticket.nom.isEmpty ? " " : toFirstCharUpperCase(ticket.prenom),
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
               )
             ],

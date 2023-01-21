@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:balapp/utils/call_apis.dart';
 import 'package:balapp/utils/init_future.dart';
 import 'package:balapp/utils/ticket.dart';
 import 'package:balapp/widgets/dialogs/connect_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class DatabaseHolder extends ChangeNotifier {
@@ -40,9 +42,22 @@ class DatabaseHolder extends ChangeNotifier {
     ws = WebSocketChannel.connect(this.apiUrl);
     wsStream = ws.stream.asBroadcastStream();
     isWebsocketOpen = ws.closeCode == null;
-    listenToStream();
+    _listenToStream();
+    _repopulateDb(value);
+    if(appMode == AppMode.bal){
+      lastScanned = db.where((Ticket e) => e.whoScanned == scannerName).toList();
+      lastScanned.sort((a, b) => b.timestamps["entered"].compareTo(a.timestamps["entered"]));
+    }else if(appMode == AppMode.buy){
+      lastScanned = db.where((Ticket e) => e.whoEntered == scannerName).toList();
+      lastScanned.sort((a, b) => b.timestamps["registered"].compareTo(a.timestamps["registered"]));
+    }
+    notifyListeners();
+    writeAllToDisk();
+  }
+
+  void _repopulateDb(List dbAsJson){
     db = [];
-    for (var e in value) {
+    for (var e in dbAsJson) {
       db.add(Ticket(
         prenom: e["prenom"],
         nom: e["nom"],
@@ -56,14 +71,6 @@ class DatabaseHolder extends ChangeNotifier {
         salle: e["salle"],
       ));
     }
-    if(appMode == AppMode.bal){
-      lastScanned = db.where((Ticket e) => e.whoScanned == scannerName).toList();
-      lastScanned.sort((a, b) => b.timestamps["entered"].compareTo(a.timestamps["entered"]));
-    }else if(appMode == AppMode.buy){
-      lastScanned = db.where((Ticket e) => e.whoEntered == scannerName).toList();
-      lastScanned.sort((a, b) => b.timestamps["registered"].compareTo(a.timestamps["registered"]));
-    }
-    writeAllToDisk();
   }
 
   void niceWsClose(){
@@ -83,7 +90,7 @@ class DatabaseHolder extends ChangeNotifier {
   void setContext(BuildContext context){
     this.context = context;
   }
-  void listenToStream(){
+  void _listenToStream(){
     wsStream.listen((message) async {
       if (message == "testConnection") {
         ws.sink.add("testConnection");
@@ -129,5 +136,14 @@ class DatabaseHolder extends ChangeNotifier {
 
   DatabaseHolder(List value, this.dbPath, this.apiUrl, this.scannerName, this.context, this.appMode, this.restartApp) {
     resetDb(value, apiUrl, true);
+  }
+
+  void reDownloadDb() async {
+    Response result = await httpCall("/downloadDb", HttpMethod.get, apiUrl);
+    if (result.statusCode >= 200 && result.statusCode < 299) {
+      List ticketsAsJson = jsonDecode(result.body);
+      _repopulateDb(ticketsAsJson);
+    }
+    notifyListeners();
   }
 }
