@@ -119,3 +119,12 @@ List<String> salleValues = [
 List<String> couleurValues = [
   "violet", "bleu", "vert", "jaune", "orange", "rose"
 ];
+
+List<String> kNiveaux = [
+  // "Niveau",
+  "2nde",
+  "PG",
+  "PSTMG",
+  "TG",
+  "TSTMG"
+];

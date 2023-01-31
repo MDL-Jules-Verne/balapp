@@ -37,7 +37,7 @@ class _ScannerNewState extends State<ScannerNew> {
 
   /*Rounded corner size*/;
 
-  bool showSearchPanel = true;
+  bool showSearchPanel = false;
   bool isLightOn = false;
 
   void setLightState(bool state) {
