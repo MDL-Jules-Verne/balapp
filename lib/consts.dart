@@ -11,14 +11,10 @@ const Color kWhite = Color(0xFFF2F2F2);
 
 const int kCodesLength = 4;
 const TextStyle h3 = TextStyle(fontSize: 24, fontWeight: FontWeight.bold);
-const TextStyle h2 =
-    TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -.4);
-const TextStyle bodyTitle =
-    TextStyle(fontSize: 19, fontWeight: FontWeight.w600, letterSpacing: -.1);
-const TextStyle body = TextStyle(
-  fontSize: 16,
-  fontWeight: FontWeight.w500,
-);
+const TextStyle h2 = TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -.4);
+const TextStyle bodyTitle = TextStyle(fontSize: 19, fontWeight: FontWeight.w600, letterSpacing: -.1);
+const TextStyle body = TextStyle(fontSize: 16,fontWeight: FontWeight.w500,);
+const TextStyle bodyBold = TextStyle(fontSize: 16,fontWeight: FontWeight.w800,);
 
 const Map<String, String> postHeaders = {
   "content-type": "application/json",
@@ -39,7 +35,12 @@ List<Ticket> searchAlgorithm(
   SearchBy searchBy,
   List<Ticket> fullList,
   String searchValue,
+    [bool showUnregisteredTickets = true]
 ) {
+  print("true: $showUnregisteredTickets");
+  if(!showUnregisteredTickets){
+    fullList.removeWhere((element) => element.prenom == "");
+  }
   searchValue = searchValue.toLowerCase();
   if (searchBy == SearchBy.none) {
     List<Ticket> emptyList =
@@ -48,6 +49,7 @@ List<Ticket> searchAlgorithm(
     if (searchBy == SearchBy.none) fullList.addAll(emptyList);
     return fullList;
   }
+
   fullList = fullList.where((Ticket el) {
     if (searchBy.isDropdown == true) {
       return el.toJson()[searchBy.keyValue].toLowerCase() == searchValue.toLowerCase();
@@ -67,23 +69,20 @@ List<Ticket> searchAlgorithm(
     }
   }).toList();
   fullList.sort((a,b) {
-    int aScore = searchScore(a, searchBy, searchValue);
-    int bScore = searchScore(b, searchBy, searchValue);
-
-
-    return bScore- aScore;
+    int aScore = (searchScore(a, searchBy, searchValue)*10).toInt();
+    int bScore = (searchScore(b, searchBy, searchValue)*10).toInt();
+    return bScore - aScore;
   });
-  //TODO: better search would be to then sort by longest string in correct order
 
   return fullList;
 }
 
-int searchScore(Ticket b, SearchBy searchBy, String searchValue){
+double searchScore(Ticket b, SearchBy searchBy, String searchValue){
   String text = b.toJson()[searchBy.keyValue].toLowerCase();
-  int maxLength = 0;
+  double maxLength = 0;
   for (int i =0; i<searchValue.length; i++){
     if(text.startsWith(searchValue.substring(0,i+1))) {
-      maxLength = i+2; // One bonus point bc the string is correct
+      maxLength = i+2.1; // One bonus point bc the string is correct
       // from the start (not really working)
     } else if(text.contains(searchValue.substring(0,i+1))){
       maxLength = i+1;

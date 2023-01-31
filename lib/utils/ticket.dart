@@ -9,25 +9,12 @@ class Ticket {
   late final String salle;
   late Map timestamps;
   late String whoScanned;
+  late int classe;
+  late String niveau;
 
   @override
   String toString() {
     return "Ticket(${toJson()})";
-  }
-
-  Ticket clone() {
-    return Ticket(
-      externe: externe,
-      id: id,
-      whoEntered: whoEntered,
-      whoScanned: whoScanned,
-      couleur: couleur,
-      prenom: prenom,
-      nom: nom,
-      hasEntered: hasEntered,
-      salle: salle,
-      timestamps: timestamps,
-    );
   }
 
   Map toJson() {
@@ -38,6 +25,8 @@ class Ticket {
       "prenom": prenom,
       "nom": nom,
       "externe": externe,
+      "classe": classe,
+      "niveau": niveau,
       "hasEntered": hasEntered,
       "whoEntered": whoEntered,
       "whoScanned": whoScanned,
@@ -45,7 +34,7 @@ class Ticket {
     };
   }
 
-  Ticket. fromJson(Map json) {
+  Ticket.fromJson(Map json) {
     externe = json["externe"] ?? false;
     id = json["id"];
     whoEntered = json["whoEntered"] ?? "";
@@ -55,6 +44,8 @@ class Ticket {
     nom = json["nom"] ?? "";
     hasEntered = json["hasEntered"] ?? false;
     salle = json["salle"];
+    classe = json["classe"];
+    niveau = json["niveau"] ?? "";
     timestamps = json["timestamps"] ??
         {
           "registered": 0,
@@ -64,18 +55,20 @@ class Ticket {
   }
 
   /// This is used in TicketWithIndex
-  Ticket.fromTicket(Ticket ticket) {
+  /*Ticket.fromTicket(Ticket ticket) {
     externe = ticket.externe;
     id = ticket.id;
     whoEntered = ticket.whoEntered;
     whoScanned = ticket.whoScanned;
     couleur = ticket.couleur;
     prenom = ticket.prenom;
+    classe = ticket.classe;
+    niveau = ticket.niveau;
     nom = ticket.nom;
     hasEntered = ticket.hasEntered;
     salle = ticket.salle;
     timestamps = ticket.timestamps;
-  }
+  }*/
 
   Ticket({
     required this.whoEntered,
@@ -86,11 +79,14 @@ class Ticket {
     required this.prenom,
     required this.nom,
     required this.hasEntered,
+    required this.classe,
+    required this.niveau,
     required this.salle,
     required this.timestamps,
   });
 }
 
+/*
 class TicketWithIndex extends Ticket {
   late final int index;
 
@@ -100,6 +96,8 @@ class TicketWithIndex extends Ticket {
   TicketWithIndex(
       {required super.whoEntered,
       required super.externe,
+      required super.classe,
+      required super.niveau,
       required super.whoScanned,
       required super.id,
       required super.couleur,
@@ -110,3 +108,4 @@ class TicketWithIndex extends Ticket {
       required super.timestamps,
       required this.index});
 }
+*/

@@ -58,18 +58,7 @@ class DatabaseHolder extends ChangeNotifier {
   void _repopulateDb(List dbAsJson){
     db = [];
     for (var e in dbAsJson) {
-      db.add(Ticket(
-        prenom: e["prenom"],
-        nom: e["nom"],
-        timestamps: e["timestamps"],
-        id: e["id"],
-        hasEntered: e["hasEntered"],
-        whoEntered: e["whoEntered"],
-        whoScanned: e["whoScanned"],
-        couleur: e["couleur"],
-        externe: e["externe"],
-        salle: e["salle"],
-      ));
+      db.add(Ticket.fromJson(e));
     }
   }
 

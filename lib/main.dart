@@ -87,6 +87,16 @@ class _MyAppState extends State<MyApp> {
                   elevation: 4
                 )
               ),
+                textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                        foregroundColor: kBlack,
+                        // backgroundColor: kPurple,
+                        minimumSize: Size(88,50),
+                        textStyle: bodyBold,
+                        elevation: 4
+                    )
+                ),
+
                 fontFamily: "Inter",
                 useMaterial3: true),
             initialRoute: "/home",

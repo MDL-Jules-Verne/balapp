@@ -1,4 +1,5 @@
 import 'package:balapp/consts.dart';
+import 'package:balapp/screens/search_vestiaires.dart';
 import 'package:balapp/screens/settings.dart';
 import 'package:balapp/widgets/custom_icon_button.dart';
 import 'package:figma_squircle/figma_squircle.dart';
@@ -43,13 +44,21 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: kWhite,
-        body: selectedButton == 1 ? Container() : const Settings(),
-        bottomNavigationBar: BottomNavbar(
-          buttons: buttons,
-          selectedButton: selectedButton,
-        ));
+    return Stack(
+      children: [
+        selectedButton == 1 ? const SearchVestiaires() : const Settings(),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: BottomNavbar(
+            buttons: buttons,
+            selectedButton: selectedButton,
+          ),
+        ),
+      ],
+
+    );
   }
 }
 
