@@ -143,6 +143,8 @@ class DatabaseHolder extends ChangeNotifier {
     if (result.statusCode >= 200 && result.statusCode < 299) {
       List ticketsAsJson = jsonDecode(result.body);
       _repopulateDb(ticketsAsJson);
+    } else {
+      throw Exception("No connection to server, cannot download DB");
     }
     notifyListeners();
   }

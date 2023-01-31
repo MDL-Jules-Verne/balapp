@@ -40,6 +40,7 @@ List<Ticket> searchAlgorithm(
   List<Ticket> fullList,
   String searchValue,
 ) {
+  searchValue = searchValue.toLowerCase();
   if (searchBy == SearchBy.none) {
     List<Ticket> emptyList =
         fullList.where((Ticket element) => element.prenom == "").toList();
@@ -47,7 +48,6 @@ List<Ticket> searchAlgorithm(
     if (searchBy == SearchBy.none) fullList.addAll(emptyList);
     return fullList;
   }
-  searchValue = searchValue.toLowerCase();
   fullList = fullList.where((Ticket el) {
     if (searchBy.isDropdown == true) {
       return el.toJson()[searchBy.keyValue].toLowerCase() == searchValue.toLowerCase();
@@ -55,7 +55,6 @@ List<Ticket> searchAlgorithm(
       String text = el.toJson()[searchBy.keyValue];
       text = text.toLowerCase();
       Map<String, int> lastSeenChar = {};
-      int i = 0;
       int totalCorrectChars = 0;
       for (String char in searchValue.characters) {
         int charIndex = text.indexOf(char, (lastSeenChar[char] ?? -1)+1);
@@ -63,14 +62,34 @@ List<Ticket> searchAlgorithm(
           lastSeenChar[char] = charIndex;
           totalCorrectChars += 1;
         }
-        i++;
       }
       return totalCorrectChars == searchValue.length;
     }
   }).toList();
+  fullList.sort((a,b) {
+    int aScore = searchScore(a, searchBy, searchValue);
+    int bScore = searchScore(b, searchBy, searchValue);
+
+
+    return bScore- aScore;
+  });
   //TODO: better search would be to then sort by longest string in correct order
 
   return fullList;
+}
+
+int searchScore(Ticket b, SearchBy searchBy, String searchValue){
+  String text = b.toJson()[searchBy.keyValue].toLowerCase();
+  int maxLength = 0;
+  for (int i =0; i<searchValue.length; i++){
+    if(text.startsWith(searchValue.substring(0,i+1))) {
+      maxLength = i+2; // One bonus point bc the string is correct
+      // from the start (not really working)
+    } else if(text.contains(searchValue.substring(0,i+1))){
+      maxLength = i+1;
+    }
+  }
+  return maxLength;
 }
 
 enum SearchBy {

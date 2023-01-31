@@ -31,17 +31,20 @@ class _SearchMiniState extends State<SearchMini> {
   @override
   void initState(){
     print("initState");
-    context.read<DatabaseHolder>().reDownloadDb();
     oldSearchBy = widget.searchBy;
     oldSearchText = widget.searchText;
     searchBy = widget.searchBy ?? searchBy;
     controller.text = widget.searchText ?? "";
     searchResults = searchAlgorithm(widget.searchBy != null ? searchBy : SearchBy.none, context.read<DatabaseHolder>().db, controller.text);
+    Future.delayed(const Duration(milliseconds: 5000),(){
+      context.read<DatabaseHolder>().reDownloadDb();
+    });
     super.initState();
   }
   @override
   Widget build(BuildContext context) {
     return Consumer<DatabaseHolder>(builder: (context, DatabaseHolder db, _) {
+      print(db.db.length);
       if(oldSearchBy != widget.searchBy || oldSearchText != widget.searchText) {
         oldSearchBy = widget.searchBy;
         oldSearchText = widget.searchText;

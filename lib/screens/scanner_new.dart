@@ -37,8 +37,7 @@ class _ScannerNewState extends State<ScannerNew> {
 
   /*Rounded corner size*/;
 
-  bool isTrulyScanning = true;
-  bool showSearchPanel = false;
+  bool showSearchPanel = true;
   bool isLightOn = false;
 
   void setLightState(bool state) {
@@ -71,7 +70,6 @@ class _ScannerNewState extends State<ScannerNew> {
     setState(() {
       showSearchPanel = false;
       currentTicket = null;
-      isTrulyScanning = true;
     });
     Future.delayed(const Duration(milliseconds: 1100), () {
       if (isLightOn) scanControl.toggleTorch();
@@ -79,12 +77,10 @@ class _ScannerNewState extends State<ScannerNew> {
   }
 
   void dismissSearch() {
-    isTrulyScanning = true;
     if (currentTicket == null) {
       dismissAll();
     } else {
       setState(() {
-        isTrulyScanning = true;
         showSearchPanel = false;
       });
     }
@@ -129,7 +125,7 @@ class _ScannerNewState extends State<ScannerNew> {
                         }
                         if (pointsInRect < 3) return;
                         //TODO: handle what to do with ticket here (e.g. launch a page with ticket info)
-                        if (isTrulyScanning == false)  {
+                        if (showSearchPanel == true)  {
                           if(code == overrideSearchString) return;
                           setState((){
                             overrideSearchBy = SearchBy.id;
@@ -173,7 +169,6 @@ class _ScannerNewState extends State<ScannerNew> {
                   } else {
                     setState(() {
                       showSearchPanel = true;
-                      scanControl.stop();
                     });
                   }
                 },
@@ -229,66 +224,6 @@ class _ScannerNewState extends State<ScannerNew> {
                     dismiss: dismissSearch,
                   ),
                 ),
-              if(!(showSearchPanel && isTrulyScanning) && currentTicket == null)Positioned(
-                left: 18.w,
-                right: 18.w,
-                top: scannerSize/2 + 145 + 20,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 2.5.w, vertical: 3),
-                  decoration: BoxDecoration(
-                      border: Border.all(color: kBlack, width: 1),
-                      borderRadius: BorderRadius.circular(14),
-                      color: Colors.black38
-                  ),
-                  child:Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              MaterialButton(
-                                minWidth: 27.5.w,
-                                elevation: 0,
-                                color: Colors.black38,
-                                disabledColor: Colors.black87,
-                                onPressed: isTrulyScanning == false ? () {
-                                  dismissSearch();
-                                  setState(() {
-                                    isTrulyScanning = true;
-                                  });
-                                } : null,
-                                padding: EdgeInsets.fromLTRB(
-                                    6.w, 0.75.h, 6.w, 0.5.h),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14.0),
-                                ),
-                                child: Text(
-                                    "Scan",
-                                    style: body.apply(color: kWhite)
-                                ),
-                              ),
-                              SizedBox(width: 2.5.w),
-                              MaterialButton(
-                                minWidth: 27.5.w,
-                                elevation: 0,
-                                color: Colors.black38,
-                                disabledColor: Colors.black,
-                                onPressed: isTrulyScanning == true ? () {
-                                  setState(() {
-                                    showSearchPanel = true;
-                                    isTrulyScanning = false;
-                                  });
-
-                                } : null,
-                                padding: EdgeInsets.fromLTRB(
-                                    6.w, 0.75.h, 6.w, 0.5.h),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14.0),
-                                ),
-                                child: Text(
-                                    "Search", style: body.apply(color: kWhite)),
-                              ),
-                            ]
-                        )
-                ),
-              ),
             ],
           ),
         ),
