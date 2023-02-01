@@ -24,7 +24,7 @@ class _HomeState extends State<Home> {
           onTap: () {
             Navigator.pushNamed(context, "/scanner");
           },
-          icon: Icons.qr_code_scanner),
+          icon: Icons.qr_code_scanner_rounded),
       ButtonDetails(
           onTap: () {
             setState(() {
@@ -57,7 +57,6 @@ class _HomeState extends State<Home> {
           ),
         ),
       ],
-
     );
   }
 }
@@ -71,10 +70,14 @@ class BottomNavbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const ShapeDecoration(
-          color: kWhite,
-          shadows: [BoxShadow(color: Colors.black26, blurRadius: 24, offset: Offset(0, -2))],
-          shape: SmoothRectangleBorder(
-              borderRadius: SmoothBorderRadius.vertical(top: SmoothRadius(cornerRadius: 24, cornerSmoothing: 1)))),
+        color: kWhite,
+        shadows: [BoxShadow(color: Colors.black26, blurRadius: 24, offset: Offset(0, -2))],
+        shape: SmoothRectangleBorder(
+          borderRadius: SmoothBorderRadius.vertical(
+            top: SmoothRadius(cornerRadius: 24, cornerSmoothing: 1),
+          ),
+        ),
+      ),
       padding: const EdgeInsets.fromLTRB(0, 13, 0, 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,

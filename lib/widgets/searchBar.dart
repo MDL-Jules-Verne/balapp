@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:balapp/consts.dart';
 import 'package:balapp/utils/database_holder.dart';
 import 'package:balapp/utils/ticket.dart';
@@ -7,10 +9,11 @@ import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 class SearchBar extends StatefulWidget {
-  SearchBar({Key? key, required this.searchBy, required this.updateSearch, required this.controller, required this.db, this.showUnregisteredTicketsCheckbox = false})
+  SearchBar({Key? key, required this.searchBy, required this.updateSearch, required this.controller, required this.db, this.showUnregisteredTicketsCheckbox = false, this.searchText})
       : super(key: key);
   final Function(List<Ticket>) updateSearch;
   final SearchBy searchBy;
+  final String? searchText;
   final bool showUnregisteredTicketsCheckbox;
   final TextEditingController controller;
   final DatabaseHolder db;
@@ -22,14 +25,36 @@ class SearchBar extends StatefulWidget {
 class _SearchBarState extends State<SearchBar> {
   late SearchBy searchBy;
   late bool showUnregisteredTickets;
+  SearchBy? oldSearchBy;
+  String? oldSearchText;
   @override
   void initState() {
+    oldSearchBy = widget.searchBy;
+    oldSearchText = widget.searchText;
     showUnregisteredTickets = !widget.showUnregisteredTicketsCheckbox;
     searchBy = widget.searchBy;
   }
 
   @override
   Widget build(BuildContext context) {
+
+    if (oldSearchBy != widget.searchBy || oldSearchText != widget.searchText) {
+      Timer.run(() {
+        setState(() {
+          oldSearchBy = widget.searchBy;
+          oldSearchText = widget.searchText;
+          searchBy = widget.searchBy;
+          widget.controller.text = widget.searchText ?? "";
+          showUnregisteredTickets = true;
+        });
+        widget.updateSearch(searchAlgorithm(
+            widget.controller.text == "" ? SearchBy.none : searchBy,
+            List<Ticket>.from(context.read<DatabaseHolder>().db),
+            widget.controller.text,
+            showUnregisteredTickets
+        ));
+      });
+    }
     return Column(
       children: [
         Row(

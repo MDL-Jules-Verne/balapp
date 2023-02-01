@@ -21,6 +21,7 @@ class SearchVestiaires extends StatefulWidget {
 
 class _SearchVestiairesState extends State<SearchVestiaires> {
   SearchBy searchBy = SearchBy.prenom;
+  String searchText = "";
   TextEditingController controller = TextEditingController();
   List<Ticket> searchResults = [];
   List<Ticket> selectedTickets = [];
@@ -36,7 +37,9 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
   void initState() {
     super.initState();
     searchResults = searchAlgorithm(
-        controller.text == "" ? SearchBy.none : searchBy, context.read<DatabaseHolder>().db, controller.text);
+        controller.text == "" ? SearchBy.none : searchBy, context
+        .read<DatabaseHolder>()
+        .db, controller.text);
     if (showUnregisteredTickets == false) searchResults.removeWhere((element) => element.prenom == "");
     Future.delayed(const Duration(milliseconds: 0), () {
       context.read<DatabaseHolder>().reDownloadDb();
@@ -67,6 +70,7 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                   Consumer<DatabaseHolder>(builder: (context, db, _) {
                     return SearchBar(
                       searchBy: searchBy,
+                      searchText: searchText,
                       updateSearch: updateSearch,
                       controller: controller,
                       db: db,
@@ -114,7 +118,61 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
               ),
             ),
             Positioned(
-                bottom: 50, child: ListeVestiaires(tickets: selectedTickets, removeTicket: removeTicketFromSelected))
+                bottom: 50, child: ListeVestiaires(tickets: selectedTickets, removeTicket: removeTicketFromSelected)),
+            Positioned(
+              right: 25,
+              bottom: 35.h + 50 + 26,
+              child: Container(
+                decoration: ShapeDecoration(
+                  shape: SmoothRectangleBorder(
+                    borderRadius: SmoothBorderRadius(
+                      cornerRadius: 16,
+                      cornerSmoothing: 1,
+                    ),
+                  ),
+                  shadows: const [BoxShadow(offset: Offset(1, 3), color: Color(0x44332A22), blurRadius: 16)],
+                  color: kBlack,
+                ),
+                child: ClipSmoothRect(
+                  radius: SmoothBorderRadius(
+                    cornerRadius: 16,
+                    cornerSmoothing: 1,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      splashColor: kWhite.withOpacity(0.4),
+                      onTap: () async {
+                        var code = await Navigator.pushNamed<dynamic>(context, "/scannerFullScreen");
+                        if (code is String) {
+                          setState((){
+                            searchText = code;
+                            searchBy = SearchBy.id;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(19, 9, 19, 9),
+                        /*decoration: ShapeDecoration(
+                          // color: kBlack,
+                          shape: SmoothRectangleBorder(
+                            borderRadius: SmoothBorderRadius(
+                              cornerRadius: 16,
+                              cornerSmoothing: 1,
+                            ),
+                          ),
+                        ),*/
+                        child: Row(/*mainAxisAlignment: MainAxisAlignment.spaceAround,*/ children: [
+                          const Icon(Icons.qr_code_scanner_rounded, color: kWhite, size: 28),
+                          const SizedBox(width: 9,),
+                          Text("Scan", style: bodyBold.apply(color: kWhite, fontWeightDelta: -1))
+                        ],),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

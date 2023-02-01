@@ -82,9 +82,9 @@ class _SearchMiniState extends State<SearchMini> {
           ),
           child: Container(
             color: kWhite,
-            height: 38.h,
+            height: 45.h,
             width: 100.w,
-            padding: const EdgeInsets.fromLTRB(28, 15, 16, 16),
+            padding: const EdgeInsets.fromLTRB(28, 15, 16, 8),
             child: Column(
               children: [
                 SearchBar(
@@ -100,13 +100,12 @@ class _SearchMiniState extends State<SearchMini> {
                     shrinkWrap: true,
                     itemCount: searchResults.length,
                     separatorBuilder: (BuildContext context, int index) {
-                      return const SizedBox(height: 10,); // Should be 4.h
+                      return const SizedBox(height: 30,); // Should be 4.h
                       // return Container();
                     },
                     itemBuilder: (BuildContext context, int index) {
-                      return TicketDetails(
+                      return TicketDetailsExtended(
                         searchResults[index],
-                        // TODO: implement isExpanded for more info
                       );
                     },
                   ),

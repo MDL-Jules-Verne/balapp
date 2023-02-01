@@ -101,7 +101,7 @@ class SalleId extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Sector: ${ticket.salle}",
+            "Sector ${ticket.salle}",
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
             overflow: TextOverflow.ellipsis,
           ),
@@ -211,7 +211,7 @@ class NomPrenomDisplay extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            ticket.nom.isEmpty ? "Pas enregistré" : ticket.nom.toUpperCase(),
+            ticket.nom.isEmpty ? "Non vendu" : ticket.nom.toUpperCase(),
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             overflow: TextOverflow.ellipsis,
           ),

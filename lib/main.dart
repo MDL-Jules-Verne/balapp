@@ -82,7 +82,7 @@ class _MyAppState extends State<MyApp> {
                 style: ElevatedButton.styleFrom(
                   foregroundColor: kWhite,
                   backgroundColor: kPurple,
-                  minimumSize: Size(88,50),
+                  minimumSize: const Size(88,50),
                   textStyle: bodyTitle,
                   elevation: 4
                 )
@@ -91,7 +91,7 @@ class _MyAppState extends State<MyApp> {
                     style: TextButton.styleFrom(
                         foregroundColor: kBlack,
                         // backgroundColor: kPurple,
-                        minimumSize: Size(88,50),
+                        minimumSize: const Size(88,50),
                         textStyle: bodyBold,
                         elevation: 4
                     )
@@ -119,6 +119,12 @@ class _MyAppState extends State<MyApp> {
                       child: const Home());
                 }
               ),
+              "/scannerFullScreen": (_) => Builder(
+                builder: (context) {
+                  context.read<DatabaseHolder>().setContext(context);
+                  return const ScannerNew(isSearch: true);
+                }
+              )
             },
           ),
         );

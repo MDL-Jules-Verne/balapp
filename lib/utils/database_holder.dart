@@ -49,6 +49,7 @@ class DatabaseHolder extends ChangeNotifier {
       lastScanned.sort((a, b) => b.timestamps["entered"].compareTo(a.timestamps["entered"]));
     }else if(appMode == AppMode.buy){
       lastScanned = db.where((Ticket e) => e.whoEntered == scannerName).toList();
+      // print(lastScanned.where((e)=>e.timestamps[]));
       lastScanned.sort((a, b) => b.timestamps["registered"].compareTo(a.timestamps["registered"]));
     }
     notifyListeners();

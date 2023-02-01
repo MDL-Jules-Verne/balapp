@@ -13,7 +13,7 @@ class CustomIconsMenu extends StatelessWidget {
   final DatabaseHolder db;
   final MobileScannerController scanControl;
   final void Function(bool) setLightState;
-  final void Function() showSearchPanel;
+  final void Function()? showSearchPanel;
 
   @override
   Widget build(BuildContext context) {
@@ -49,11 +49,10 @@ class CustomIconsMenu extends StatelessWidget {
                           List? wsData = await showConnectDialog(context, true, db.apiUrl.authority);
                           if(wsData == null) return;
                           db.resetDb(wsData[2], wsData[0], );
-                          //TODO: process this to change connection (don't forget to redownload db and every field that could change)
                         }),
-                    CustomIconButton(
+                    if(showSearchPanel != null)CustomIconButton(
                         paddingSizeDelta: - 8, icon: Icons.search, onTap: () {
-                          showSearchPanel();
+                          showSearchPanel!();
                     }),
                     ValueListenableBuilder(
                         valueListenable: scanControl.torchState,

@@ -6,6 +6,7 @@ import 'package:balapp/utils/database_holder.dart';
 import 'package:balapp/utils/init_future.dart';
 import 'package:balapp/widgets/confirm_enter.dart';
 import 'package:balapp/widgets/custom_icons_menu.dart';
+import 'package:balapp/widgets/qr_code_corners.dart.old';
 import 'package:balapp/widgets/register_ticket.dart';
 import 'package:balapp/widgets/scan_history.dart';
 import 'package:balapp/widgets/search_mini.dart';
@@ -18,18 +19,19 @@ import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 class ScannerNew extends StatefulWidget {
-  const ScannerNew({Key? key}) : super(key: key);
-
+  const ScannerNew({Key? key, this.isSearch = false}) : super(key: key);
+  final bool isSearch;
   @override
   State<ScannerNew> createState() => _ScannerNewState();
 }
 
 class _ScannerNewState extends State<ScannerNew> {
-  bool isCameraOpen = false;
+  bool isCameraOpen = true;
   String? currentTicket;
   DateTime lastScan = DateTime.now();
   GlobalKey maskKey = GlobalKey();
-  Rect maskRect = Rect.fromLTWH(0, 0, 0, 0);
+  Rect maskRect = const Rect.fromLTWH(0, 0, 0, 0);
+  // List<Offset> qrOffsets = [];
   double historySize = 36.3.h;
   SearchBy? overrideSearchBy;
   String? overrideSearchString;
@@ -49,6 +51,9 @@ class _ScannerNewState extends State<ScannerNew> {
   @override
   void initState() {
     super.initState();
+    if(widget.isSearch){
+      scannerSize = 100.h;
+    }
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       BuildContext? context = maskKey.currentContext;
       if (context == null) {
@@ -60,9 +65,9 @@ class _ScannerNewState extends State<ScannerNew> {
       maskRect =
           Rect.fromLTWH(offset.dx, offset.dy, box.size.width, box.size.height);
     });
-    Future.delayed(const Duration(milliseconds: 1000), () {
+    /*Future.delayed(const Duration(milliseconds: 1000), () {
       if (kDebugMode) scanControl.stop();
-    });
+    });*/
   }
 
   void dismissAll() {
@@ -92,13 +97,13 @@ class _ScannerNewState extends State<ScannerNew> {
         backgroundColor: Colors.black,
         // appBar: PreferredSize(preferredSize: Size(0,0), child: AppBar(),),//CustomAppBar(scannerName: db.scannerName),
         body: SizedBox(
-          // width: 100.w,
           height: 100.h,
           child: Stack(
             children: [
               if (isCameraOpen == true || !kDebugMode)
                 SizedBox(
                   height: scannerSize,
+                  width: 100.w,
                   child: MobileScanner(
                       controller: scanControl,
                       allowDuplicates: true,
@@ -118,13 +123,12 @@ class _ScannerNewState extends State<ScannerNew> {
                         }
 
                         List<Offset> offsets = barcode.corners!.map((e) =>
-                            e.translate(-40, -40)).toList();
+                            e.translate(-40, widget.isSearch ? 100: -40)).toList();
                         int pointsInRect = 0;
                         for (Offset i in offsets) {
                           if (maskRect.contains(i)) pointsInRect++;
                         }
                         if (pointsInRect < 3) return;
-                        //TODO: handle what to do with ticket here (e.g. launch a page with ticket info)
                         if (showSearchPanel == true)  {
                           if(code == overrideSearchString) return;
                           setState((){
@@ -132,6 +136,9 @@ class _ScannerNewState extends State<ScannerNew> {
                             overrideSearchString = code;
                           });
                         } else {
+                          if(widget.isSearch) {
+                            return Navigator.pop(context, code);
+                          }
                           setState(() {
                             currentTicket = code;
                             scanControl.stop();
@@ -152,10 +159,11 @@ class _ScannerNewState extends State<ScannerNew> {
                             isCameraOpen = true;
                           });
                         },
-                        child: Text("Activate camera"),
+                        child: const Text("Activate camera"),
                       )),
                 ),
               ScanMask(
+                bottomPaddingDelta: widget.isSearch ? 150 : 0,
                 maskKey: maskKey,
                 scannerSize: scannerSize,
               ),
@@ -163,7 +171,7 @@ class _ScannerNewState extends State<ScannerNew> {
                 setLightState: setLightState,
                 db: db,
                 scanControl: scanControl,
-                showSearchPanel: () {
+                showSearchPanel: widget.isSearch ? null : () {
                   if (showSearchPanel == true) {
                     dismissSearch();
                   } else {
@@ -174,7 +182,7 @@ class _ScannerNewState extends State<ScannerNew> {
                 },
               ),
 
-              Positioned(
+              if(!widget.isSearch)Positioned(
                 bottom: 0,
                 child: ClipSmoothRect(
                   radius: const SmoothBorderRadius.vertical(
@@ -224,6 +232,13 @@ class _ScannerNewState extends State<ScannerNew> {
                     dismiss: dismissSearch,
                   ),
                 ),
+              /*Positioned.fromRect(rect: maskRect, child: ColoredBox(color: kWhite,)),
+              Positioned.fill(
+                child: CustomPaint(
+                  size: Size(100.w, 100.h),
+                  painter: QrCodePainter(qrOffsets, kGreen)
+                ),
+              )*/
             ],
           ),
         ),
@@ -233,9 +248,10 @@ class _ScannerNewState extends State<ScannerNew> {
 }
 
 class ScanMask extends StatelessWidget {
-  const ScanMask({Key? key, required this.maskKey, required this.scannerSize})
+  const ScanMask({Key? key, required this.maskKey, required this.scannerSize, this.bottomPaddingDelta=0})
       : super(key: key);
   final GlobalKey maskKey;
+  final double bottomPaddingDelta;
   final double scannerSize;
 
   @override
@@ -253,19 +269,21 @@ class ScanMask extends StatelessWidget {
               height: scannerSize,
               width: 100.w,
               child: Center(
-                child: ClipSmoothRect(
-                  radius: SmoothBorderRadius(
-                    cornerRadius: 38,
-                    cornerSmoothing: 1,
-                  ),
-                  child: Container(
-                    key: maskKey,
-                    // margin: EdgeInsets.fromLTRB(20.w, 30.h, 20.w, 30.h),
-                    width: 290,
-                    height: 290,
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
-                      backgroundBlendMode: BlendMode.clear,
+                child: Padding(
+                  padding: EdgeInsets.only(bottom:bottomPaddingDelta),
+                  child: ClipSmoothRect(
+                    radius: SmoothBorderRadius(
+                      cornerRadius: 38,
+                      cornerSmoothing: 1,
+                    ),
+                    child: Container(
+                      key: maskKey,
+                      width: 290,
+                      height: 290,
+                      decoration: const BoxDecoration(
+                        color: Colors.black,
+                        backgroundBlendMode: BlendMode.clear,
+                      ),
                     ),
                   ),
                 ),
