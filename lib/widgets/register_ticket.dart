@@ -39,8 +39,8 @@ class _RegisterTicketState extends State<RegisterTicket> {
     return isExternal != null &&
         firstNameController.text.isNotEmpty &&
         lastNameController.text.isNotEmpty &&
-        classe != null &&
-        niveau != null;
+        (classe != null || isExternal == true) &&
+        (niveau != null || isExternal == true);
   }
 
   void setInternalExternal(bool isExternal) {
@@ -247,62 +247,65 @@ class _RegisterTicketState extends State<RegisterTicket> {
                             error!,
                             style: const TextStyle(color: kRed, fontSize: 18),
                           ),
-                        const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              flex:6,
-                              fit: FlexFit.tight,
-                              child: DropdownButton<String>(
-                                isExpanded: true,
-                                value: niveau,
-                                items: [
-                                  for (String niveauStr in kNiveaux)
-                                    DropdownMenuItem<String>(
-                                      value: niveauStr,
-                                      child: Text(niveauStr, style: bodyTitle),
-                                    ),
-                                ],
-                                onChanged: (String? selectedValue) {
-                                  if (selectedValue == null) return;
-                                  setState(() {
-                                    niveau = selectedValue;
-                                  });
-                                },
-                                hint: Text(
-                                  "Niveau",
-                                  style: body.apply(fontSizeFactor: 1.2),
+                        if(isExternal == false)const SizedBox(height: 10),
+                        if (isExternal == false)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Flexible(
+                                flex: 6,
+                                fit: FlexFit.tight,
+                                child: DropdownButton<String>(
+                                  isExpanded: true,
+                                  value: niveau,
+                                  items: [
+                                    for (String niveauStr in kNiveaux)
+                                      DropdownMenuItem<String>(
+                                        value: niveauStr,
+                                        child: Text(niveauStr, style: bodyTitle),
+                                      ),
+                                  ],
+                                  onChanged: (String? selectedValue) {
+                                    if (selectedValue == null) return;
+                                    setState(() {
+                                      niveau = selectedValue;
+                                    });
+                                  },
+                                  hint: Text(
+                                    "Niveau",
+                                    style: body.apply(fontSizeFactor: 1.2),
+                                  ),
+                                  underline: const HorizontalLine(),
                                 ),
-                                underline: const HorizontalLine(),
                               ),
-                            ),
-                            const SizedBox(width:  30,),
-                            Flexible(
-                              flex:4,
-                              fit: FlexFit.tight,
-                              child: DropdownButton<int>(
-                                value: classe,
-                                isExpanded: true,
-                                items: [
-                                  for (int i = 1; i < 10; i++)
-                                    DropdownMenuItem<int>(
-                                      value: i,
-                                      child: Text("$i", style: bodyTitle),
-                                    ),
-                                ],
-                                onChanged: (int? selectedValue) {
-                                  if (selectedValue == null) return;
-                                  setState(() {
-                                    classe = selectedValue;
-                                  });
-                                },
-                                hint: Text("Classe", style: body.apply(fontSizeFactor: 1.2)),
-                                underline: const HorizontalLine(),
+                              const SizedBox(
+                                width: 30,
                               ),
-                            )
-                          ],
-                        ),
+                              Flexible(
+                                flex: 4,
+                                fit: FlexFit.tight,
+                                child: DropdownButton<int>(
+                                  value: classe,
+                                  isExpanded: true,
+                                  items: [
+                                    for (int i = 1; i < 10; i++)
+                                      DropdownMenuItem<int>(
+                                        value: i,
+                                        child: Text("$i", style: bodyTitle),
+                                      ),
+                                  ],
+                                  onChanged: (int? selectedValue) {
+                                    if (selectedValue == null) return;
+                                    setState(() {
+                                      classe = selectedValue;
+                                    });
+                                  },
+                                  hint: Text("Classe", style: body.apply(fontSizeFactor: 1.2)),
+                                  underline: const HorizontalLine(),
+                                ),
+                              )
+                            ],
+                          ),
                         Flexible(
                           flex: 2,
                           fit: FlexFit.tight,
@@ -372,8 +375,10 @@ class _RegisterTicketState extends State<RegisterTicket> {
                                               ticket!.prenom = firstNameController.text;
                                               ticket!.nom = lastNameController.text;
                                               ticket!.externe = isExternal!;
-                                              ticket!.classe = classe!;
-                                              ticket!.niveau = niveau!;
+                                              if(isExternal == false){
+                                                ticket!.classe = classe!;
+                                                ticket!.niveau = niveau!;
+                                              }
                                               ticket!.whoEntered = db.scannerName;
                                               Response result = await httpCall(
                                                   "/ticketRegistration/enterTicket/", HttpMethod.post, widget.apiUrl,

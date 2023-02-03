@@ -27,6 +27,7 @@ class _SearchMiniState extends State<SearchMini> {
   SearchBy searchBy = SearchBy.prenom;
   SearchBy? oldSearchBy;
   String? oldSearchText;
+  bool isLoading = true;
   List<Ticket> searchResults = [];
   String dropdownSearchBy = "Toutes";
 
@@ -37,11 +38,13 @@ class _SearchMiniState extends State<SearchMini> {
     oldSearchText = widget.searchText;
     searchBy = widget.searchBy ?? searchBy;
     controller.text = widget.searchText ?? "";
-    searchResults = searchAlgorithm(widget.searchBy != null ? searchBy : SearchBy.none, context
-        .read<DatabaseHolder>()
-        .db, controller.text);
-    Future.delayed(const Duration(milliseconds: 0), () {
-      context.read<DatabaseHolder>().reDownloadDb();
+    Future.delayed(const Duration(milliseconds: 0), () async {
+      DatabaseHolder db = context.read<DatabaseHolder>();
+      await db.reDownloadDb();
+      setState((){
+        searchResults = searchAlgorithm(widget.searchBy != null ? searchBy : SearchBy.none, List.from(db.db), controller.text);
+        isLoading = false;
+      });
     });
     super.initState();
   }
@@ -93,6 +96,7 @@ class _SearchMiniState extends State<SearchMini> {
                   controller: controller,
                   db:db
                 ),
+                if(isLoading) const CircularProgressIndicator(),
                 Flexible(
                   fit: FlexFit.tight,
                   flex: 1,

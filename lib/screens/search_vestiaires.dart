@@ -24,6 +24,7 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
   String searchText = "";
   TextEditingController controller = TextEditingController();
   List<Ticket> searchResults = [];
+  bool isLoading = true;
   List<Ticket> selectedTickets = [];
   bool showUnregisteredTickets = false;
 
@@ -36,13 +37,15 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
   @override
   void initState() {
     super.initState();
-    searchResults = searchAlgorithm(
-        controller.text == "" ? SearchBy.none : searchBy, context
-        .read<DatabaseHolder>()
-        .db, controller.text);
-    if (showUnregisteredTickets == false) searchResults.removeWhere((element) => element.prenom == "");
-    Future.delayed(const Duration(milliseconds: 0), () {
-      context.read<DatabaseHolder>().reDownloadDb();
+    Future.delayed(const Duration(milliseconds: 0), () async {
+      DatabaseHolder db = context.read<DatabaseHolder>();
+      await db.reDownloadDb();
+      setState((){
+        searchResults = searchAlgorithm(
+            controller.text == "" ? SearchBy.none : searchBy, List.from(db.db), controller.text);
+        if (showUnregisteredTickets == false) searchResults.removeWhere((element) => element.prenom == "");
+        isLoading = false;
+      });
     });
   }
 
@@ -78,6 +81,8 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                     );
                   }),
                   SizedBox(height: 2.h),
+                  if(isLoading)
+                    const CircularProgressIndicator(),
                   SizedBox(
                     height: 60.h,
                     child: ListView.separated(

@@ -61,7 +61,7 @@ class TicketDetailsExtended extends StatelessWidget {
               width: 4.h,
             ),
             Text(
-              ticket.nom.isEmpty ? "" : ticket.niveau + ticket.classe.toString(),
+              ticket.niveau.isEmpty ? "" : ticket.niveau + ticket.classe.toString(),
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
             )
           ],
@@ -138,7 +138,7 @@ class ColorDisplay extends StatelessWidget {
               cornerSmoothing: 1,
             ),
           ),
-          color: kGreen,
+          color: stringToColor[ticket.couleur],
         ),
         child: Center(
           child: Text(

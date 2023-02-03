@@ -1,11 +1,15 @@
 import 'package:balapp/utils/ticket.dart';
 import 'package:flutter/material.dart';
 
-const Color kPurple = Color(0xFF8140C1);
+const Color kPurple = Color(0xFF8040C1);
 const Color kPurpleLight = Color(0xFFC2A4E2);
 const Color kGreen = Color(0xFF69C140);
 const Color kGreenLight = Color(0xFF8BDC65);
-const Color kRed = Color(0xFFEF3737);
+const Color kRed = Color(0xFFFF1F41);
+const Color kOrange = Color(0xFFFFA621);
+const Color kYellow = Color(0xFFFFDD29);
+const Color kPink = Color(0xFFFC5D96);
+const Color kBlue = Color(0xFF3A97ED);
 const Color kBlack = Color(0xFF332A22);
 const Color kWhite = Color(0xFFF2F2F2);
 
@@ -37,7 +41,7 @@ List<Ticket> searchAlgorithm(
   String searchValue,
     [bool showUnregisteredTickets = true]
 ) {
-  print("true: $showUnregisteredTickets");
+  print("${fullList.length}");
   if(!showUnregisteredTickets){
     fullList.removeWhere((element) => element.prenom == "");
   }
@@ -119,6 +123,15 @@ List<String> salleValues = [
 List<String> couleurValues = [
   "violet", "bleu", "vert", "jaune", "orange", "rose"
 ];
+
+Map<String, Color> stringToColor  = {
+  "violet" : kPurple,
+  "bleu" : kBlue,
+  "vert" : kGreen,
+  "jaune" : kYellow,
+  "orange" : kOrange,
+  "rose" : kPink,
+};
 
 List<String> kNiveaux = [
   // "Niveau",

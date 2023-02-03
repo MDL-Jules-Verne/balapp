@@ -22,7 +22,7 @@ class CustomTextInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     List<TextInputFormatter>? formatterNew = formatter;
-    formatterNew ??= [FilteringTextInputFormatter.allow(RegExp("[a-zÀ-ÿ]|-|_|,", caseSensitive: false))];
+    formatterNew ??= [FilteringTextInputFormatter.allow(RegExp("[a-zA-Z]|-|_|,", caseSensitive: false))];
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,

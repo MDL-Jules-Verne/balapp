@@ -128,7 +128,7 @@ class DatabaseHolder extends ChangeNotifier {
     resetDb(value, apiUrl, true);
   }
 
-  void reDownloadDb() async {
+  Future<void> reDownloadDb() async {
     Response result = await httpCall("/downloadDb", HttpMethod.get, apiUrl);
     if (result.statusCode >= 200 && result.statusCode < 299) {
       List ticketsAsJson = jsonDecode(result.body);
