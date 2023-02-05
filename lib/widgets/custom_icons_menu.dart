@@ -39,14 +39,14 @@ class CustomIconsMenu extends StatelessWidget {
                 child: Row(
                   children: [
                     CustomIconButton(
-                        backgroundColor: db.isWebsocketOpen ? kWhite : kRed,
-                        iconColor: db.isWebsocketOpen ? kGreen : kWhite,
+                        backgroundColor: db.isOfflineMode ? kYellow : db.isWebsocketOpen ? kWhite : kRed,
+                        iconColor: db.isOfflineMode ? kBlack : db.isWebsocketOpen ? kGreen : kWhite,
                         paddingSizeDelta: - 8,
                         icon: db.isWebsocketOpen ? Icons.wifi_tethering : Icons.wifi_tethering_off,
-                        onTap: () async {
+                        onTap: db.isOfflineMode ? null : () async {
                           //[uri, appMode, db, channel, broadcast]
                           db.niceWsClose();
-                          List? wsData = await showConnectDialog(context, true, db.apiUrl.authority);
+                          List? wsData = await showConnectDialog(context, db.apiUrl?.authority);
                           if(wsData == null) return;
                           db.resetDb(wsData[2], wsData[0], );
                         }),

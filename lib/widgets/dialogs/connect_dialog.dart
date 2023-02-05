@@ -13,14 +13,13 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../utils/init_future.dart';
 
-Future<List?> showConnectDialog(BuildContext context, bool showSkipButton, [String? presetIp]) {
-  return showDialog(context: context, builder: (_) => ConnectDialog(showSkipButton: showSkipButton, presetIp: presetIp));
+Future<List?> showConnectDialog(BuildContext context, [String? presetIp]) {
+  return showDialog(context: context, builder: (_) => ConnectDialog(presetIp: presetIp));
 }
 
 class ConnectDialog extends StatefulWidget {
-  const ConnectDialog({Key? key, this.prefs, required this.showSkipButton, required this.presetIp}) : super(key: key);
+  const ConnectDialog({Key? key, this.prefs, required this.presetIp}) : super(key: key);
   final SharedPreferences? prefs;
-  final bool showSkipButton;
   final String? presetIp;
 
 
@@ -60,7 +59,6 @@ class _ConnectDialogState extends State<ConnectDialog> {
         ],
       ),
       actions: [
-        if (widget.showSkipButton)
           TextButton(
               onPressed: () {
                 skipButtonTap++;

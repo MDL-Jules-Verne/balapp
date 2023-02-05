@@ -13,36 +13,42 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 class DatabaseHolder extends ChangeNotifier {
   List<Ticket> db = [];
+  String scannerName;
   BuildContext context;
+  late List<Ticket> lastScanned;
+  void Function() restartApp;
+  AppMode appMode;
+
+  bool isOfflineMode;
+  bool isWebsocketOpen = false;
+  String dbPath;
+
   int reconnectTries = 5;
   late Stream wsStream;
   late Stream timeout;
-  String dbPath;
-  late WebSocketChannel ws;
-  late Uri apiUrl;
-  String scannerName;
-  late bool isWebsocketOpen;
-  bool ignoreNextDisconnect = false;
   StreamSubscription? timeoutStreamSubscription;
-  late List<Ticket> lastScanned;
+  late WebSocketChannel ws;
+  Uri? apiUrl;
   int retryLimit = 3;
-  AppMode appMode;
-  void Function() restartApp;
+  bool ignoreNextDisconnect = false;
 
-  // TODO: this ?
+
   // late List<Ticket> lastScannedGlobal;
   void resetDb(
     List value,
-    Uri apiUrl,
+    Uri? apiUrl,
       [bool isFromConstructor = false]
   ) {
     if(!isFromConstructor) {
       this.apiUrl = apiUrl;
     }
-    ws = WebSocketChannel.connect(this.apiUrl);
-    wsStream = ws.stream.asBroadcastStream();
-    isWebsocketOpen = ws.closeCode == null;
-    _listenToStream();
+    if(!isOfflineMode){
+      ws = WebSocketChannel.connect(this.apiUrl!);
+      wsStream = ws.stream.asBroadcastStream();
+      isWebsocketOpen = ws.closeCode == null;
+      _listenToStream();
+      reconnectTries = 5;
+    }
     _repopulateDb(value);
     if(appMode == AppMode.bal){
       lastScanned = db.where((Ticket e) => e.whoScanned == scannerName).toList();
@@ -72,8 +78,9 @@ class DatabaseHolder extends ChangeNotifier {
   }
 
   void tryReconnect() async {
+    if(isOfflineMode) throw Exception("Offline mode, cannot try to reconnect");
     niceWsClose();
-      List? wsData = await connectToServer(context, false, uri: apiUrl, setError: (e)=>print(e));
+      List? wsData = await connectToServer(context, false, uri: apiUrl!, setError: (e)=>print(e));
       if(wsData != null) resetDb(wsData[2], wsData[0]);
       // try again if this fails
   }
@@ -121,15 +128,16 @@ class DatabaseHolder extends ChangeNotifier {
   }
 
   Future<void> writeAllToDisk() async {
-    await File("$dbPath/db.json").writeAsString(jsonEncode(db.map((e)=>e.toJson()).toList()));
+    await File("$dbPath/db.json").writeAsString(jsonEncode({"tickets": db.map((e)=>e.toJson()).toList(), "hasUnsavedData": isOfflineMode}));
   }
 
-  DatabaseHolder(List value, this.dbPath, this.apiUrl, this.scannerName, this.context, this.appMode, this.restartApp) {
+  DatabaseHolder(List value, this.dbPath, this.apiUrl, this.scannerName, this.context, this.appMode, this.restartApp, this.isOfflineMode) {
     resetDb(value, apiUrl, true);
   }
 
   Future<void> reDownloadDb() async {
-    Response result = await httpCall("/downloadDb", HttpMethod.get, apiUrl);
+    if(isOfflineMode || apiUrl == null) throw Exception("Offline mode, cannot download database");
+    Response result = await httpCall("/downloadDb", HttpMethod.get, apiUrl!);
     if (result.statusCode >= 200 && result.statusCode < 299) {
       List ticketsAsJson = jsonDecode(result.body);
       _repopulateDb(ticketsAsJson);

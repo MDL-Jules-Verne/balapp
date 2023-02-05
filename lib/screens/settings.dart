@@ -1,5 +1,6 @@
 import 'package:balapp/consts.dart';
 import 'package:balapp/utils/database_holder.dart';
+import 'package:balapp/utils/init_future.dart';
 import 'package:balapp/widgets/dialogs/connect_dialog.dart';
 import 'package:balapp/widgets/horizontal_line.dart';
 import 'package:figma_squircle/figma_squircle.dart';
@@ -8,6 +9,7 @@ import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Settings extends StatelessWidget {
   const Settings({Key? key}) : super(key: key);
@@ -32,8 +34,8 @@ class Settings extends StatelessWidget {
               SizedBox(height: 3.3.h),
               Consumer<DatabaseHolder>(builder: (context, db, _) {
                   return GestureDetector(
-                    onTap: () async {
-                      List? wsData = await showConnectDialog(context, true, db.apiUrl.authority);
+                    onTap: db.isOfflineMode ? null : () async {
+                      List? wsData = await showConnectDialog(context, db.apiUrl?.authority);
                       if(wsData == null) return;
                       db.niceWsClose();
                       db.resetDb(wsData[2], wsData[0], );
@@ -50,11 +52,11 @@ class Settings extends StatelessWidget {
                               shadows: [
                                 BoxShadow(
                                   offset: const Offset(0,7),
-                                  color: db.isWebsocketOpen ? kGreenLight.withOpacity(.60) : kRed.withOpacity(.5),
+                                  color: db.isOfflineMode ? kYellow :db.isWebsocketOpen ? kGreenLight.withOpacity(.60) : kRed.withOpacity(.5),
                                   blurRadius: 20
                                 )
                               ],
-                              color: db.isWebsocketOpen ? kGreen : kRed,
+                              color: db.isOfflineMode ? kYellow : db.isWebsocketOpen ? kGreen : kRed,
                               shape: SmoothRectangleBorder(
                                 borderRadius: SmoothBorderRadius(
                                   cornerRadius: 15,
@@ -67,7 +69,7 @@ class Settings extends StatelessWidget {
                                 Icon(
                                   db.isWebsocketOpen ? Icons.wifi_tethering : Icons.wifi_tethering_off,
                                   size: 42,
-                                  color: db.isWebsocketOpen ? kBlack : kWhite,
+                                  color: db.isWebsocketOpen || db.isOfflineMode ? kBlack : kWhite,
                                   // color: db.isWebsocketOpen ? kBlack : kWhite,
                                 ),
                                 const SizedBox(width: 20,),
@@ -79,17 +81,17 @@ class Settings extends StatelessWidget {
                                       Text(
                                         "Connexion au serveur",
                                         style: bodyTitle.apply(
-                                          color: db.isWebsocketOpen ? kBlack : kWhite,
+                                          color: db.isWebsocketOpen || db.isOfflineMode ? kBlack : kWhite,
                                         ),
                                       ),
                                       const SizedBox(height: 1, ),
                                       const SizedBox(height: 1, ),
                                       Text(
-                                        db.isWebsocketOpen ? "Connecté" :"Erreur lors de la connexion",
+                                        db.isOfflineMode ? "Mode hors-ligne" : db.isWebsocketOpen ? "Connecté" :"Erreur lors de la connexion",
                                         style: TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w500,
-                                          color: db.isWebsocketOpen ? kBlack : kWhite,
+                                          color: db.isWebsocketOpen || db.isOfflineMode ? kBlack : kWhite,
                                         ),
                                       ),
                                     ],
@@ -104,6 +106,56 @@ class Settings extends StatelessWidget {
                 }),
               // const HorizontalLine(),
               const SizedBox(height: 19,),
+              Consumer<DatabaseHolder>(
+                builder: (context, db, _) {
+                  return ListTile(
+                    shape: SmoothRectangleBorder(
+                      borderRadius: SmoothBorderRadius(
+                        cornerRadius: 15,
+                        cornerSmoothing: 1,
+                      ),
+                    ),
+                    onTap: () async {
+                      DatabaseHolder db = context.read<DatabaseHolder>();
+                    },
+                    // contentPadding: EdgeInsets.fromLTRB(4.w, 1.h, 3.w, 1.h),
+                    iconColor: Colors.black,
+                    leading: Icon(
+                      db.isOfflineMode ? Icons.airplanemode_inactive : Icons.airplanemode_active,
+                      size: 42,
+                    ),
+                    title: Text(db.isOfflineMode ? "Sortir du mode hors ligne" : "Passer en mode hors-ligne", style: bodyTitle,),
+                    subtitle: Text(db.isOfflineMode ? "Vous devrez vous connecter au serveur" : "N'utiliser que en cas de dysfonctionnement", style: body),
+                  );
+                }
+              ),
+              const SizedBox(height: 19,),
+              Consumer<DatabaseHolder>(
+                builder: (context, db, _) {
+                  return ListTile(
+                    shape: SmoothRectangleBorder(
+                      borderRadius: SmoothBorderRadius(
+                        cornerRadius: 15,
+                        cornerSmoothing: 1,
+                      ),
+                    ),
+                    onTap: () async {
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      await prefs.setString("appMode", db.appMode == AppMode.buy ? 'bal' : 'buy');
+                      db.restartApp();
+                    },
+                    // contentPadding: EdgeInsets.fromLTRB(4.w, 1.h, 3.w, 1.h),
+                    iconColor: Colors.black,
+                    leading: const Icon(
+                      Icons.compare_arrows,
+                      size: 42,
+                    ),
+                    title: const Text("Changer de mode", style: bodyTitle,),
+                    subtitle: Text("Passer en mode ${db.appMode == AppMode.buy ? 'bal' : 'buy'}\nRedémarre l'application", style: body),
+                  );
+                }
+              ),
+              const SizedBox(height: 19,),
               ListTile(
                 shape: SmoothRectangleBorder(
                   borderRadius: SmoothBorderRadius(
@@ -113,6 +165,8 @@ class Settings extends StatelessWidget {
                 ),
                 onTap: () async {
                   DatabaseHolder db = context.read<DatabaseHolder>();
+                  //TODO: implement offline
+                  await db.reDownloadDb();
                   await db.writeAllToDisk();
                   await Share.shareXFiles([XFile("${db.dbPath}/db.json", name: "db.json")]);
                 },

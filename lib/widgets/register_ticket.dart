@@ -13,10 +13,46 @@ import 'package:http/src/response.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
+typedef StrToVoidFn = void Function(String?);
+
+Future<Ticket?> loadTicket(bool isOfflineMode, String ticketId, StrToVoidFn setFatalError,
+    StrToVoidFn setFatalErrorDetails, Uri? apiUrl) async {
+  if (!isOfflineMode && apiUrl == null) throw Exception("Cannot use network without a provided apiUrl");
+  if (!isOfflineMode) {
+    Response result = await httpCall("/ticketRegistration/ticketInfo/$ticketId", HttpMethod.get, apiUrl!);
+    if (result.statusCode < 200 && result.statusCode > 299) {
+      setFatalError(result.statusCode.toString());
+      setFatalErrorDetails(result.body);
+      try {
+        Map ticketDecode = jsonDecode(result.body);
+        setFatalErrorDetails(ticketDecode["res"]);
+        // ignore: empty_catches
+      } catch (e) {}
+      return null;
+    }
+
+    Map ticketDecode;
+    try {
+      ticketDecode = jsonDecode(result.body);
+    } catch (e, s) {
+      setFatalError("Unable to parse json response");
+      setFatalErrorDetails(e as String?);
+      return null;
+    }
+    if (ticketDecode["success"] == false) {
+      setFatalError(ticketDecode["res"]);
+    }
+    return Ticket.fromJson(ticketDecode["res"]);
+  } else {
+    //TODO: load ticket from db
+    return null;
+  }
+}
+
 class RegisterTicket extends StatefulWidget {
   const RegisterTicket(this.ticketId, this.apiUrl, this.dismiss, {Key? key}) : super(key: key);
   final String ticketId;
-  final Uri apiUrl;
+  final Uri? apiUrl;
   final void Function() dismiss;
 
   @override
@@ -49,50 +85,33 @@ class _RegisterTicketState extends State<RegisterTicket> {
     });
   }
 
+  void setFatalError(String? fatalError) {
+    setState((){
+      this.fatalError = fatalError;
+    });
+  }
+
+  void setFatalErrorDetails(String? fatalError) {
+    setState(() {
+      this.fatalError = fatalError;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     Timer.run(() async {
-      Response result =
-          await httpCall("/ticketRegistration/ticketInfo/${widget.ticketId}", HttpMethod.get, widget.apiUrl);
-
-      if (result.statusCode >= 200 && result.statusCode < 299) {
-        Map ticketDecode;
-        try {
-          ticketDecode = jsonDecode(result.body);
-        } catch (e, s) {
-          setState(() {
-            fatalError = "Unable to parse json response";
-            fatalErrorDetails = e as String?;
-          });
-          return;
-        }
-        if (ticketDecode["success"] == false) {
-          return setState(() {
-            fatalError = ticketDecode["res"];
-          });
-        }
-        ticket = Ticket.fromJson(ticketDecode["res"]);
-        if (ticket?.nom != "") {
-          setState(() {
-            fatalError = "Ticket déjà vendu";
-            fatalErrorDetails = alreadySoldString;
-            fatalErrorNeedDismiss = false;
-          });
-        } else {
-          setState(() {});
-        }
-      } else {
+      DatabaseHolder db = context.read<DatabaseHolder>();
+      ticket = await loadTicket(db.isOfflineMode, widget.ticketId, setFatalError, setFatalErrorDetails, widget.apiUrl);
+      if (ticket == null) return;
+      if (ticket?.nom != "") {
         setState(() {
-          fatalError = result.statusCode.toString();
-          fatalErrorDetails = result.body;
-          Map ticketDecode;
-          try {
-            ticketDecode = jsonDecode(result.body);
-            fatalErrorDetails = ticketDecode["res"];
-            // ignore: empty_catches
-          } catch (e) {}
+          fatalError = "Ticket déjà vendu";
+          fatalErrorDetails = alreadySoldString;
+          fatalErrorNeedDismiss = false;
         });
+      } else {
+        setState(() {});
       }
     });
   }
@@ -247,7 +266,7 @@ class _RegisterTicketState extends State<RegisterTicket> {
                             error!,
                             style: const TextStyle(color: kRed, fontSize: 18),
                           ),
-                        if(isExternal == false)const SizedBox(height: 10),
+                        if (isExternal == false) const SizedBox(height: 10),
                         if (isExternal == false)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -375,27 +394,32 @@ class _RegisterTicketState extends State<RegisterTicket> {
                                               ticket!.prenom = firstNameController.text;
                                               ticket!.nom = lastNameController.text;
                                               ticket!.externe = isExternal!;
-                                              if(isExternal == false){
+                                              if (isExternal == false) {
                                                 ticket!.classe = classe!;
                                                 ticket!.niveau = niveau!;
                                               }
                                               ticket!.whoEntered = db.scannerName;
-                                              Response result = await httpCall(
-                                                  "/ticketRegistration/enterTicket/", HttpMethod.post, widget.apiUrl,
-                                                  body: jsonEncode(ticket!.toJson()));
-                                              if (result.statusCode > 299 || result.statusCode < 200) {
-                                                setState(() {
-                                                  error = result.body;
-                                                });
-                                              } else {
-                                                int duplicateIndex = db.lastScanned
-                                                    .indexWhere((Ticket element) => element.id == ticket!.id);
-                                                if (duplicateIndex != -1) {
-                                                  db.lastScanned.removeAt(duplicateIndex);
+                                              if (!db.isOfflineMode) {
+                                                Response result = await httpCall(
+                                                    "/ticketRegistration/enterTicket/", HttpMethod.post, widget.apiUrl!,
+                                                    body: jsonEncode(ticket!.toJson()));
+                                                if (result.statusCode > 299 || result.statusCode < 200) {
+                                                  setState(() {
+                                                    error = result.body;
+                                                  });
+                                                  return;
                                                 }
-                                                db.lastScanned.insert(0, ticket!);
-                                                widget.dismiss();
+                                              } else {
+                                                //TODO: store ticket to db
                                               }
+
+                                              int duplicateIndex = db.lastScanned
+                                                  .indexWhere((Ticket element) => element.id == ticket!.id);
+                                              if (duplicateIndex != -1) {
+                                                db.lastScanned.removeAt(duplicateIndex);
+                                              }
+                                              db.lastScanned.insert(0, ticket!);
+                                              widget.dismiss();
                                             },
                                       style: TextButton.styleFrom(
                                           padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),

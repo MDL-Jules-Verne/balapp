@@ -37,7 +37,9 @@ class _MyAppState extends State<MyApp> {
 
   void restartApp(){
     setState(() {
-
+      isFirstTime = true;
+      hasRunFirstTime = false;
+      userData = null;
     });
   }
 
@@ -74,7 +76,7 @@ class _MyAppState extends State<MyApp> {
     return Builder(
       builder: (context) {
         return ChangeNotifierProvider<DatabaseHolder>(
-          create: (_)=> DatabaseHolder(userData!.db, userData!.dbPath, userData!.apiUrl, userData!.scannerName, context, userData!.appMode, restartApp),
+          create: (_)=> DatabaseHolder(userData!.db, userData!.dbPath, userData!.apiUrl, userData!.scannerName, context, userData!.appMode, restartApp, userData!.apiUrl == null || userData!.hasUnsavedData),
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
             theme: ThemeData(

@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:balapp/consts.dart';
 import 'package:balapp/widgets/dialogs/connect_dialog.dart';
 import 'package:balapp/widgets/dialogs/name_dialog.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -41,24 +43,40 @@ Future<InitData?> initApp(
   }
 
   while (data == null) {
-    data = await showConnectDialog(context, fileExists);
+    data = await showConnectDialog(context);
   }
-  //TODO: handle skip
-  return InitData(scannerName: name, db: data[2], appMode: data[1], dbPath: path, apiUrl: data[0]);
+  Map localDb;
+
+  if (!fileExists) {
+    String dbStr = await rootBundle.loadString('assets/db.json');
+    await File('$path/db.json').writeAsString(dbStr);
+    localDb = jsonDecode(dbStr);
+  } else {
+    localDb = jsonDecode(await File('$path/db.json').readAsString());
+  }
+
+  if (data.isEmpty || localDb["hasUnsavedData"] == true) {
+    AppMode appMode = AppMode.getByString(prefs.getString("appMode") ?? "buy") ?? AppMode.buy;
+    return InitData(
+      appMode: appMode,
+      hasUnsavedData: localDb["hasUnsavedData"] == true,
+      db: localDb["tickets"],
+      scannerName: name,
+      dbPath: path,
+    );
+  }
+  return InitData(scannerName: name, db: data[2], appMode: data[1], dbPath: path, apiUrl: data[0], hasUnsavedData: false);
 }
 
 class InitData {
   String scannerName;
+  bool hasUnsavedData;
   AppMode appMode;
   List db;
   String dbPath;
-  Uri apiUrl;
+  Uri? apiUrl;
 
-  InitData(
-      {required this.scannerName,
-      required this.db,
-      required this.appMode,
-      required this.dbPath, required this.apiUrl});
+  InitData({required this.scannerName, required this.db, required this.appMode, required this.dbPath, required this.hasUnsavedData, this.apiUrl});
 }
 
 enum AppMode {
@@ -67,10 +85,11 @@ enum AppMode {
   ;
 
   const AppMode(this.value);
+
   final String value;
 
   @override
-  String toString(){
+  String toString() {
     return toFirstCharUpperCase("Mode: $value");
   }
 
