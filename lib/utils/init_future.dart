@@ -35,17 +35,8 @@ Future<InitData?> initApp(
   String path = (await getApplicationDocumentsDirectory()).path;
   bool fileExists = await File('$path/db.json').exists();
   // 0: uri, 1: appmode, 2: db, 3: channel, 4: broadcast
-  List? data;
-  String? serverUrl = prefs.getString("serverUrl");
-  if (serverUrl != null) {
-    data = await connectToServer(context, false, uri: Uri.parse(serverUrl), setError: (err) => print(err))
-        .timeout(const Duration(seconds: 4), onTimeout: () => null);
-  }
 
-  while (data == null) {
-    data = await showConnectDialog(context);
-  }
-  Map localDb;
+  List localDb;
 
   if (!fileExists) {
     String dbStr = await rootBundle.loadString('assets/db.json');
@@ -54,13 +45,23 @@ Future<InitData?> initApp(
   } else {
     localDb = jsonDecode(await File('$path/db.json').readAsString());
   }
+  bool hasUnsavedData = localDb.any((element) => element["isNotSync"] == true);
+  List? data;
+  String? serverUrl = prefs.getString("serverUrl");
+  if (serverUrl != null && !hasUnsavedData) {
+    data = await connectToServer(context, false, uri: Uri.parse(serverUrl), setError: (err) => print(err))
+        .timeout(const Duration(seconds: 4), onTimeout: () => null);
+  }
 
-  if (data.isEmpty || localDb["hasUnsavedData"] == true) {
+  while (data == null && !hasUnsavedData) {
+    data = await showConnectDialog(context);
+  }
+  if (hasUnsavedData || data == null || data.isEmpty) {
     AppMode appMode = AppMode.getByString(prefs.getString("appMode") ?? "buy") ?? AppMode.buy;
     return InitData(
       appMode: appMode,
-      hasUnsavedData: localDb["hasUnsavedData"] == true,
-      db: localDb["tickets"],
+      hasUnsavedData: hasUnsavedData == true,
+      db: localDb,
       scannerName: name,
       dbPath: path,
     );

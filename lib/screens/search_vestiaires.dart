@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:balapp/consts.dart';
 import 'package:balapp/utils/database_holder.dart';
 import 'package:balapp/utils/ticket.dart';
@@ -37,12 +39,12 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 0), () async {
+    Timer.run(() async {
       DatabaseHolder db = context.read<DatabaseHolder>();
-      await db.reDownloadDb();
-      setState((){
-        searchResults = searchAlgorithm(
-            controller.text == "" ? SearchBy.none : searchBy, List.from(db.db), controller.text);
+      if (!db.isOfflineMode) await db.reDownloadDb();
+      setState(() {
+        searchResults =
+            searchAlgorithm(controller.text == "" ? SearchBy.none : searchBy, List.from(db.db), controller.text);
         if (showUnregisteredTickets == false) searchResults.removeWhere((element) => element.prenom == "");
         isLoading = false;
       });
@@ -81,8 +83,7 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                     );
                   }),
                   SizedBox(height: 2.h),
-                  if(isLoading)
-                    const CircularProgressIndicator(),
+                  if (isLoading) const CircularProgressIndicator(),
                   SizedBox(
                     height: 60.h,
                     child: ListView.separated(
@@ -150,7 +151,7 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                       onTap: () async {
                         var code = await Navigator.pushNamed<dynamic>(context, "/scannerFullScreen");
                         if (code is String) {
-                          setState((){
+                          setState(() {
                             searchText = code;
                             searchBy = SearchBy.id;
                           });
@@ -167,11 +168,15 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                             ),
                           ),
                         ),*/
-                        child: Row(/*mainAxisAlignment: MainAxisAlignment.spaceAround,*/ children: [
-                          const Icon(Icons.qr_code_scanner_rounded, color: kWhite, size: 28),
-                          const SizedBox(width: 9,),
-                          Text("Scan", style: bodyBold.apply(color: kWhite, fontWeightDelta: -1))
-                        ],),
+                        child: Row(
+                          /*mainAxisAlignment: MainAxisAlignment.spaceAround,*/ children: [
+                            const Icon(Icons.qr_code_scanner_rounded, color: kWhite, size: 28),
+                            const SizedBox(
+                              width: 9,
+                            ),
+                            Text("Scan", style: bodyBold.apply(color: kWhite, fontWeightDelta: -1))
+                          ],
+                        ),
                       ),
                     ),
                   ),

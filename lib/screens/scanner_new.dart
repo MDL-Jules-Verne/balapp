@@ -21,6 +21,7 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 class ScannerNew extends StatefulWidget {
   const ScannerNew({Key? key, this.isSearch = false}) : super(key: key);
   final bool isSearch;
+
   @override
   State<ScannerNew> createState() => _ScannerNewState();
 }
@@ -30,14 +31,14 @@ class _ScannerNewState extends State<ScannerNew> {
   String? currentTicket;
   DateTime lastScan = DateTime.now();
   GlobalKey maskKey = GlobalKey();
+  SearchData searchData = SearchData(SearchBy.prenom, "", []);
   Rect maskRect = const Rect.fromLTWH(0, 0, 0, 0);
+
   // List<Offset> qrOffsets = [];
   double historySize = 36.3.h;
   SearchBy? overrideSearchBy;
   String? overrideSearchString;
-  double scannerSize = 100.h - 36.3.h + 35
-
-  /*Rounded corner size*/;
+  double scannerSize = 100.h - 36.3.h + 35 /*Rounded corner size*/;
 
   bool showSearchPanel = false;
   bool isLightOn = false;
@@ -51,7 +52,7 @@ class _ScannerNewState extends State<ScannerNew> {
   @override
   void initState() {
     super.initState();
-    if(widget.isSearch){
+    if (widget.isSearch) {
       scannerSize = 100.h;
     }
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
@@ -62,8 +63,7 @@ class _ScannerNewState extends State<ScannerNew> {
       RenderBox box = context.findRenderObject() as RenderBox;
 
       Offset offset = box.localToGlobal(Offset.zero);
-      maskRect =
-          Rect.fromLTWH(offset.dx, offset.dy, box.size.width, box.size.height);
+      maskRect = Rect.fromLTWH(offset.dx, offset.dy, box.size.width, box.size.height);
     });
     /*Future.delayed(const Duration(milliseconds: 1000), () {
       if (kDebugMode) scanControl.stop();
@@ -90,6 +90,7 @@ class _ScannerNewState extends State<ScannerNew> {
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<DatabaseHolder>(builder: (context, DatabaseHolder db, _) {
@@ -108,35 +109,30 @@ class _ScannerNewState extends State<ScannerNew> {
                       controller: scanControl,
                       allowDuplicates: true,
                       onDetect: (barcode, args) async {
-                        if (lastScan.add(const Duration(milliseconds: 600))
-                            .isAfter(DateTime.now())) return;
+                        if (lastScan.add(const Duration(milliseconds: 600)).isAfter(DateTime.now())) return;
                         if (barcode.rawValue == null) return;
 
                         final String code = barcode.rawValue!;
                         lastScan = DateTime.now();
-                        if (code.runtimeType != String ||
-                            code.length != kCodesLength) {
+                        if (code.runtimeType != String || code.length != kCodesLength) {
                           ScaffoldMessenger.of(context)
-                              .showSnackBar(const SnackBar(
-                              content: Text("Impossible de lire le qrCode")));
+                              .showSnackBar(const SnackBar(content: Text("Impossible de lire le qrCode")));
                           return;
                         }
 
-                        List<Offset> offsets = barcode.corners!.map((e) =>
-                            e.translate(-40, widget.isSearch ? 100: -40)).toList();
+                        List<Offset> offsets =
+                            barcode.corners!.map((e) => e.translate(-40, widget.isSearch ? 100 : -40)).toList();
                         int pointsInRect = 0;
                         for (Offset i in offsets) {
                           if (maskRect.contains(i)) pointsInRect++;
                         }
                         if (pointsInRect < 3) return;
-                        if (showSearchPanel == true)  {
-                          if(code == overrideSearchString) return;
-                          setState((){
-                            overrideSearchBy = SearchBy.id;
-                            overrideSearchString = code;
-                          });
+                        if (showSearchPanel == true) {
+                          if (searchData.searchText != code || searchData.searchBy != SearchBy.id || true) {
+                            searchData.changeSearchParams(SearchBy.id, code);
+                          }
                         } else {
-                          if(widget.isSearch) {
+                          if (widget.isSearch) {
                             return Navigator.pop(context, code);
                           }
                           setState(() {
@@ -153,14 +149,14 @@ class _ScannerNewState extends State<ScannerNew> {
                   color: kBlack,
                   child: Center(
                       child: ElevatedButton(
-                        onPressed: () {
-                          scanControl.start();
-                          setState(() {
-                            isCameraOpen = true;
-                          });
-                        },
-                        child: const Text("Activate camera"),
-                      )),
+                    onPressed: () {
+                      scanControl.start();
+                      setState(() {
+                        isCameraOpen = true;
+                      });
+                    },
+                    child: const Text("Activate camera"),
+                  )),
                 ),
               ScanMask(
                 bottomPaddingDelta: widget.isSearch ? 150 : 0,
@@ -171,34 +167,46 @@ class _ScannerNewState extends State<ScannerNew> {
                 setLightState: setLightState,
                 db: db,
                 scanControl: scanControl,
-                showSearchPanel: widget.isSearch ? null : () {
-                  if (showSearchPanel == true) {
-                    dismissSearch();
-                  } else {
-                    setState(() {
-                      showSearchPanel = true;
-                    });
-                  }
-                },
+                showSearchPanel: widget.isSearch
+                    ? null
+                    : () async {
+                        if (showSearchPanel == true) {
+                          dismissSearch();
+                        } else {
+                          searchData.changeLoadingState(true);
+                          setState(() {
+                            showSearchPanel = true;
+                          });
+                          DatabaseHolder db = context.read<DatabaseHolder>();
+                          if (!db.isOfflineMode) await db.reDownloadDb();
+                          // searchData.changeSearchParams(SearchBy.prenom, "");
+                          searchData.updateSearch(
+                            searchAlgorithm(searchData.searchText == "" ? SearchBy.none : searchData.searchBy,
+                                List.from(db.db), searchData.searchText),
+                          );
+                          searchData.changeLoadingState(false);
+                        }
+                      },
               ),
 
-              if(!widget.isSearch)Positioned(
-                bottom: 0,
-                child: ClipSmoothRect(
-                  radius: const SmoothBorderRadius.vertical(
-                    top: SmoothRadius(
-                      cornerRadius: 26,
-                      cornerSmoothing: 1,
+              if (!widget.isSearch)
+                Positioned(
+                  bottom: 0,
+                  child: ClipSmoothRect(
+                    radius: const SmoothBorderRadius.vertical(
+                      top: SmoothRadius(
+                        cornerRadius: 26,
+                        cornerSmoothing: 1,
+                      ),
+                    ),
+                    child: Container(
+                      color: kWhite,
+                      height: 35.h,
+                      width: 100.w,
+                      child: ScanHistory(tickets: db.lastScanned),
                     ),
                   ),
-                  child: Container(
-                    color: kWhite,
-                    height: 35.h,
-                    width: 100.w,
-                    child: ScanHistory(tickets: db.lastScanned),
-                  ),
                 ),
-              ),
               // if(offsets.isNotEmpty)Positioned.fill(child: CustomPaint(size: Size(100.w, 100.h,), painter: QrCodePainter(offsets, squareColor),)),
               if (db.appMode == AppMode.bal && currentTicket != null)
                 Positioned(
@@ -211,9 +219,7 @@ class _ScannerNewState extends State<ScannerNew> {
                   ),
                 ),
               if (db.appMode == AppMode.buy && currentTicket != null)
-                Positioned(bottom: 0,
-                    child: RegisterTicket(
-                        currentTicket!, db.apiUrl, dismissAll)),
+                Positioned(bottom: 0, child: RegisterTicket(currentTicket!, db.apiUrl, dismissAll)),
               if (showSearchPanel)
                 Positioned.fill(
                   top: 13.h,
@@ -226,10 +232,13 @@ class _ScannerNewState extends State<ScannerNew> {
               if (showSearchPanel)
                 Positioned(
                   bottom: 0,
-                  child: SearchMini(
-                    searchBy: overrideSearchBy,
-                    searchText: overrideSearchString,
-                    dismiss: dismissSearch,
+                  child: ChangeNotifierProvider<SearchData>.value(
+                    value: searchData,
+                    child: SearchMini(
+                      searchBy: overrideSearchBy,
+                      searchText: overrideSearchString,
+                      dismiss: dismissSearch,
+                    ),
                   ),
                 ),
               /*Positioned.fromRect(rect: maskRect, child: ColoredBox(color: kWhite,)),
@@ -248,7 +257,7 @@ class _ScannerNewState extends State<ScannerNew> {
 }
 
 class ScanMask extends StatelessWidget {
-  const ScanMask({Key? key, required this.maskKey, required this.scannerSize, this.bottomPaddingDelta=0})
+  const ScanMask({Key? key, required this.maskKey, required this.scannerSize, this.bottomPaddingDelta = 0})
       : super(key: key);
   final GlobalKey maskKey;
   final double bottomPaddingDelta;
@@ -270,7 +279,7 @@ class ScanMask extends StatelessWidget {
               width: 100.w,
               child: Center(
                 child: Padding(
-                  padding: EdgeInsets.only(bottom:bottomPaddingDelta),
+                  padding: EdgeInsets.only(bottom: bottomPaddingDelta),
                   child: ClipSmoothRect(
                     radius: SmoothBorderRadius(
                       cornerRadius: 38,

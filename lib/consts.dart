@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:balapp/utils/ticket.dart';
 import 'package:flutter/material.dart';
 
@@ -17,8 +19,14 @@ const int kCodesLength = 4;
 const TextStyle h3 = TextStyle(fontSize: 24, fontWeight: FontWeight.bold);
 const TextStyle h2 = TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: -.4);
 const TextStyle bodyTitle = TextStyle(fontSize: 19, fontWeight: FontWeight.w600, letterSpacing: -.1);
-const TextStyle body = TextStyle(fontSize: 16,fontWeight: FontWeight.w500,);
-const TextStyle bodyBold = TextStyle(fontSize: 16,fontWeight: FontWeight.w800,);
+const TextStyle body = TextStyle(
+  fontSize: 16,
+  fontWeight: FontWeight.w500,
+);
+const TextStyle bodyBold = TextStyle(
+  fontSize: 16,
+  fontWeight: FontWeight.w800,
+);
 
 const Map<String, String> postHeaders = {
   "content-type": "application/json",
@@ -35,20 +43,40 @@ const String alreadySoldString = """Ce ticket a déjà été vendu
 Ne modifiez le ticket que si vous êtes sûr·e qu'il s'agit d'une erreur""";
 const List<Widget> fakeWidgetArray = [SizedBox()];
 
-List<Ticket> searchAlgorithm(
-  SearchBy searchBy,
-  List<Ticket> fullList,
-  String searchValue,
-    [bool showUnregisteredTickets = true]
-) {
-  print("${fullList.length}");
-  if(!showUnregisteredTickets){
+class SearchData extends ChangeNotifier {
+  SearchData(this.searchBy, this.searchText, this.searchResults, [this.loading = true]);
+
+  void updateSearch(List<Ticket> searchResults) {
+    this.searchResults = searchResults;
+    notifyListeners();
+  }
+
+  List<Ticket> searchResults;
+  SearchBy searchBy;
+  bool loading;
+  String searchText;
+
+  void changeSearchParams(SearchBy searchBy, String searchText, {bool notify = true}) {
+    print("test");
+    this.searchBy = searchBy;
+    this.searchText = searchText;
+    if (notify) notifyListeners();
+  }
+
+  void changeLoadingState(bool loading) {
+    this.loading = loading;
+    notifyListeners();
+  }
+}
+
+List<Ticket> searchAlgorithm(SearchBy searchBy, List<Ticket> fullList, String searchValue,
+    [bool showUnregisteredTickets = true]) {
+  if (!showUnregisteredTickets) {
     fullList.removeWhere((element) => element.prenom == "");
   }
   searchValue = searchValue.toLowerCase();
   if (searchBy == SearchBy.none) {
-    List<Ticket> emptyList =
-        fullList.where((Ticket element) => element.prenom == "").toList();
+    List<Ticket> emptyList = fullList.where((Ticket element) => element.prenom == "").toList();
     fullList.removeWhere((element) => element.prenom == "");
     if (searchBy == SearchBy.none) fullList.addAll(emptyList);
     return fullList;
@@ -63,7 +91,7 @@ List<Ticket> searchAlgorithm(
       Map<String, int> lastSeenChar = {};
       int totalCorrectChars = 0;
       for (String char in searchValue.characters) {
-        int charIndex = text.indexOf(char, (lastSeenChar[char] ?? -1)+1);
+        int charIndex = text.indexOf(char, (lastSeenChar[char] ?? -1) + 1);
         if (charIndex != -1) {
           lastSeenChar[char] = charIndex;
           totalCorrectChars += 1;
@@ -72,24 +100,24 @@ List<Ticket> searchAlgorithm(
       return totalCorrectChars == searchValue.length;
     }
   }).toList();
-  fullList.sort((a,b) {
-    int aScore = (searchScore(a, searchBy, searchValue)*10).toInt();
-    int bScore = (searchScore(b, searchBy, searchValue)*10).toInt();
+  fullList.sort((a, b) {
+    int aScore = (searchScore(a, searchBy, searchValue) * 10).toInt();
+    int bScore = (searchScore(b, searchBy, searchValue) * 10).toInt();
     return bScore - aScore;
   });
 
   return fullList;
 }
 
-double searchScore(Ticket b, SearchBy searchBy, String searchValue){
+double searchScore(Ticket b, SearchBy searchBy, String searchValue) {
   String text = b.toJson()[searchBy.keyValue].toLowerCase();
   double maxLength = 0;
-  for (int i =0; i<searchValue.length; i++){
-    if(text.startsWith(searchValue.substring(0,i+1))) {
-      maxLength = i+2.1; // One bonus point bc the string is correct
+  for (int i = 0; i < searchValue.length; i++) {
+    if (text.startsWith(searchValue.substring(0, i + 1))) {
+      maxLength = i + 2.1; // One bonus point bc the string is correct
       // from the start (not really working)
-    } else if(text.contains(searchValue.substring(0,i+1))){
-      maxLength = i+1;
+    } else if (text.contains(searchValue.substring(0, i + 1))) {
+      maxLength = i + 1;
     }
   }
   return maxLength;
@@ -117,20 +145,17 @@ enum SearchBy {
     return toFirstCharUpperCase("Mode: $value");
   }
 }
-List<String> salleValues = [
-  "A", "B", "C", "D", "E", "F"
-];
-List<String> couleurValues = [
-  "violet", "bleu", "vert", "jaune", "orange", "rose"
-];
 
-Map<String, Color> stringToColor  = {
-  "violet" : kPurple,
-  "bleu" : kBlue,
-  "vert" : kGreen,
-  "jaune" : kYellow,
-  "orange" : kOrange,
-  "rose" : kPink,
+List<String> salleValues = ["A", "B", "C", "D", "E", "F"];
+List<String> couleurValues = ["violet", "bleu", "vert", "jaune", "orange", "rose"];
+
+Map<String, Color> stringToColor = {
+  "violet": kPurple,
+  "bleu": kBlue,
+  "vert": kGreen,
+  "jaune": kYellow,
+  "orange": kOrange,
+  "rose": kPink,
 };
 
 List<String> kNiveaux = [

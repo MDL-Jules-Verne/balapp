@@ -11,6 +11,7 @@ class Ticket {
   late String whoScanned;
   late int classe;
   late String niveau;
+  bool? isNotSync;
 
   @override
   String toString() {
@@ -27,6 +28,7 @@ class Ticket {
       "externe": externe,
       "classe": classe,
       "niveau": niveau,
+      "isNotSync": isNotSync,
       "hasEntered": hasEntered,
       "whoEntered": whoEntered,
       "whoScanned": whoScanned,
@@ -37,6 +39,7 @@ class Ticket {
   Ticket.fromJson(Map json) {
     externe = json["externe"] ?? false;
     id = json["id"];
+    isNotSync = json["isNotSync"];
     whoEntered = json["whoEntered"] ?? "";
     whoScanned = json["whoScanned"] ?? "";
     couleur = json["couleur"];
@@ -83,6 +86,7 @@ class Ticket {
     required this.niveau,
     required this.salle,
     required this.timestamps,
+    this.isNotSync
   });
 }
 

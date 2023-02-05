@@ -116,7 +116,13 @@ class Settings extends StatelessWidget {
                       ),
                     ),
                     onTap: () async {
-                      DatabaseHolder db = context.read<DatabaseHolder>();
+                      if (db.isOfflineMode) {
+                        List? wsData = await showConnectDialog(context, db.apiUrl?.authority);
+                        if(wsData == null) return;
+                        db.stopOfflineMode(wsData[0]);
+                      } else {
+                        db.startOfflineMode();
+                      }
                     },
                     // contentPadding: EdgeInsets.fromLTRB(4.w, 1.h, 3.w, 1.h),
                     iconColor: Colors.black,
@@ -165,8 +171,7 @@ class Settings extends StatelessWidget {
                 ),
                 onTap: () async {
                   DatabaseHolder db = context.read<DatabaseHolder>();
-                  //TODO: implement offline
-                  await db.reDownloadDb();
+                  if(!db.isOfflineMode) await db.reDownloadDb();
                   await db.writeAllToDisk();
                   await Share.shareXFiles([XFile("${db.dbPath}/db.json", name: "db.json")]);
                 },

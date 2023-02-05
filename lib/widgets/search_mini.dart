@@ -24,54 +24,10 @@ class SearchMini extends StatefulWidget {
 
 class _SearchMiniState extends State<SearchMini> {
   TextEditingController controller = TextEditingController();
-  SearchBy searchBy = SearchBy.prenom;
-  SearchBy? oldSearchBy;
-  String? oldSearchText;
-  bool isLoading = true;
-  List<Ticket> searchResults = [];
-  String dropdownSearchBy = "Toutes";
-
-  @override
-  void initState() {
-    print("initState");
-    oldSearchBy = widget.searchBy;
-    oldSearchText = widget.searchText;
-    searchBy = widget.searchBy ?? searchBy;
-    controller.text = widget.searchText ?? "";
-    Future.delayed(const Duration(milliseconds: 0), () async {
-      DatabaseHolder db = context.read<DatabaseHolder>();
-      await db.reDownloadDb();
-      setState((){
-        searchResults = searchAlgorithm(widget.searchBy != null ? searchBy : SearchBy.none, List.from(db.db), controller.text);
-        isLoading = false;
-      });
-    });
-    super.initState();
-  }
-
-  void updateSearch(List<Ticket> newList) {
-    setState(() {
-      searchResults = newList;
-    });
-  }
-
+  String oldSearchText = "";
   @override
   Widget build(BuildContext context) {
     return Consumer<DatabaseHolder>(builder: (context, DatabaseHolder db, _){
-      print(db.db.length);
-      if (oldSearchBy != widget.searchBy || oldSearchText != widget.searchText) {
-        oldSearchBy = widget.searchBy;
-        oldSearchText = widget.searchText;
-        searchBy = widget.searchBy ?? searchBy;
-        controller.text = widget.searchText ?? controller.text;
-        Timer.run(() {
-          updateSearch(searchAlgorithm(
-              controller.text == "" ? SearchBy.none : searchBy,
-              List<Ticket>.from(db.db),
-              controller.text
-          ));
-        });
-      }
         return ClipSmoothRect(
           radius: const SmoothBorderRadius.only(
             topLeft: SmoothRadius(
@@ -90,28 +46,44 @@ class _SearchMiniState extends State<SearchMini> {
             padding: const EdgeInsets.fromLTRB(28, 15, 16, 8),
             child: Column(
               children: [
-                SearchBar(
-                  searchBy: searchBy,
-                  updateSearch: updateSearch,
-                  controller: controller,
-                  db:db
+                Consumer<SearchData>(
+                  builder: (context, searchData, _) {
+                    if(searchData.searchText != oldSearchText) {
+                      controller.text = searchData.searchText;
+                      oldSearchText = searchData.searchText;
+                    }
+                    return SearchBar(
+                      searchBy: searchData.searchBy,
+                      searchText: searchData.searchText,
+                      updateSearch: searchData.updateSearch,
+                      controller: controller,
+                      db:db
+                    );
+                  }
                 ),
-                if(isLoading) const CircularProgressIndicator(),
+                if(false) const CircularProgressIndicator(),
                 Flexible(
                   fit: FlexFit.tight,
                   flex: 1,
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: searchResults.length,
-                    separatorBuilder: (BuildContext context, int index) {
-                      return const SizedBox(height: 30,); // Should be 4.h
-                      // return Container();
-                    },
-                    itemBuilder: (BuildContext context, int index) {
-                      return TicketDetailsExtended(
-                        searchResults[index],
+                  child: Consumer<SearchData>(
+                    builder: (context, searchData, _) {
+                      if(searchData.loading){
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      return ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: searchData.searchResults.length,
+                        separatorBuilder: (BuildContext context, int index) {
+                          return const SizedBox(height: 30,); // Should be 4.h
+                          // return Container();
+                        },
+                        itemBuilder: (BuildContext context, int index) {
+                          return TicketDetailsExtended(
+                            searchData.searchResults[index],
+                          );
+                        },
                       );
-                    },
+                    }
                   ),
                 )
               ],

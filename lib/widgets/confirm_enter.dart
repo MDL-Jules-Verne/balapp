@@ -56,7 +56,7 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
     super.initState();
     Timer.run(() async {
       DatabaseHolder db = context.read<DatabaseHolder>();
-      ticket = await loadTicket(db.isOfflineMode, widget.ticketId, setFatalError, setFatalErrorDetails, widget.apiUrl);
+      ticket = await loadTicket(widget.ticketId, setFatalError, setFatalErrorDetails, db);
 
       if (ticket?.nom == "") {
         setState(() {
@@ -174,7 +174,11 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                               return;
                                             }
                                           } else {
-                                            //TODO: Write the ticket to storage
+                                            ticket!.hasEntered = true;
+                                            ticket!.whoScanned = widget.scannerName;
+                                            print(ticket);
+                                            int index = db.db.indexWhere((element) => element.id == ticket!.id);
+                                            db.editAndSaveTicket(ticket!, index);
                                           }
                                           int duplicateIndex =
                                               db.lastScanned.indexWhere((Ticket element) => element.id == ticket!.id);
@@ -220,7 +224,10 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                             return;
                                           }
                                         } else {
-                                          //TODO: write to db
+                                          ticket!.hasEntered = false;
+                                          ticket!.whoScanned = "";
+                                          int index = db.db.indexWhere((element) => element.id == ticket!.id);
+                                          db.editAndSaveTicket(ticket!, index);
                                         }
                                         int duplicateIndex =
                                             db.lastScanned.indexWhere((Ticket element) => element.id == ticket!.id);

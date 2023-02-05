@@ -15,11 +15,11 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 
 typedef StrToVoidFn = void Function(String?);
 
-Future<Ticket?> loadTicket(bool isOfflineMode, String ticketId, StrToVoidFn setFatalError,
-    StrToVoidFn setFatalErrorDetails, Uri? apiUrl) async {
-  if (!isOfflineMode && apiUrl == null) throw Exception("Cannot use network without a provided apiUrl");
-  if (!isOfflineMode) {
-    Response result = await httpCall("/ticketRegistration/ticketInfo/$ticketId", HttpMethod.get, apiUrl!);
+Future<Ticket?> loadTicket(String ticketId, StrToVoidFn setFatalError,
+    StrToVoidFn setFatalErrorDetails, DatabaseHolder db) async {
+  if (!db.isOfflineMode && db.apiUrl == null) throw Exception("Cannot use network without a provided apiUrl");
+  if (!db.isOfflineMode) {
+    Response result = await httpCall("/ticketRegistration/ticketInfo/$ticketId", HttpMethod.get, db.apiUrl!);
     if (result.statusCode < 200 && result.statusCode > 299) {
       setFatalError(result.statusCode.toString());
       setFatalErrorDetails(result.body);
@@ -44,8 +44,7 @@ Future<Ticket?> loadTicket(bool isOfflineMode, String ticketId, StrToVoidFn setF
     }
     return Ticket.fromJson(ticketDecode["res"]);
   } else {
-    //TODO: load ticket from db
-    return null;
+    return db.db.firstWhere((element) => element.id == ticketId);
   }
 }
 
@@ -102,7 +101,7 @@ class _RegisterTicketState extends State<RegisterTicket> {
     super.initState();
     Timer.run(() async {
       DatabaseHolder db = context.read<DatabaseHolder>();
-      ticket = await loadTicket(db.isOfflineMode, widget.ticketId, setFatalError, setFatalErrorDetails, widget.apiUrl);
+      ticket = await loadTicket(widget.ticketId, setFatalError, setFatalErrorDetails, db);
       if (ticket == null) return;
       if (ticket?.nom != "") {
         setState(() {
@@ -410,7 +409,8 @@ class _RegisterTicketState extends State<RegisterTicket> {
                                                   return;
                                                 }
                                               } else {
-                                                //TODO: store ticket to db
+                                                int index = db.db.indexWhere((element) => element.id == ticket!.id);
+                                                db.editAndSaveTicket(ticket!, index);
                                               }
 
                                               int duplicateIndex = db.lastScanned
