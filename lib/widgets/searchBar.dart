@@ -126,8 +126,8 @@ class _SearchBarState extends State<SearchBar> {
                   DropdownButton<SearchBy>(
                       items: [
                         for (SearchBy searchKey in const [
-                          SearchBy.prenom,
                           SearchBy.global,
+                          SearchBy.prenom,
                           SearchBy.id,
                           SearchBy.nom,
                           SearchBy.vendeur,

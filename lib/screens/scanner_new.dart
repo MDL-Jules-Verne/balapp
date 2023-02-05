@@ -31,7 +31,7 @@ class _ScannerNewState extends State<ScannerNew> {
   String? currentTicket;
   DateTime lastScan = DateTime.now();
   GlobalKey maskKey = GlobalKey();
-  SearchData searchData = SearchData(SearchBy.prenom, "", []);
+  SearchData searchData = SearchData(SearchBy.global, "", []);
   Rect maskRect = const Rect.fromLTWH(0, 0, 0, 0);
 
   // List<Offset> qrOffsets = [];

@@ -150,8 +150,8 @@ double searchScore(Ticket b, SearchBy searchBy, String searchValue) {
 }
 
 enum SearchBy {
-  prenom("Prénom", false, "prenom"),
   global("Global", false, "global", isGlobal: true),
+  prenom("Prénom", false, "prenom"),
   id("Id", false, "id"),
   nom("Nom", false, "nom"),
   vendeur("Vendeur", false, "whoEntered"),

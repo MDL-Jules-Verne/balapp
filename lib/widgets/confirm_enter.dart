@@ -39,8 +39,9 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
       return true;
     }
   }
+
   void setFatalError(String? fatalError) {
-    setState((){
+    setState(() {
       this.fatalError = fatalError;
     });
   }
@@ -88,7 +89,7 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
             : isError
                 ? kRed
                 : kGreen,
-        height: 38.h,
+        height: isError ? 42.h: 38.h,
         width: 100.w,
         child: error == null && ticket == null && fatalError == null
             ? const Center(
@@ -117,7 +118,7 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                   ? "Erreur lors de la lecture"
                                   : ticket!.hasEntered
                                       ? "Ticket déjà utilisé"
-                                      : "Ticket disponible",
+                                      : "Ticket valide",
                               style: bodyTitle,
                             ),
                           ],
@@ -139,10 +140,11 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                     fit: FlexFit.tight,
                     child: Container(
                       width: 100.w,
-                      decoration: const ShapeDecoration(
-                        color: kWhite,
+                      decoration: ShapeDecoration(
+                        color:  kWhite,
                         shape: SmoothRectangleBorder(
-                            borderRadius: SmoothBorderRadius.all(SmoothRadius(cornerRadius: 24, cornerSmoothing: 1))),
+                            borderRadius:
+                                SmoothBorderRadius.vertical(top: SmoothRadius(cornerRadius: 24, cornerSmoothing: 1))),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(31, 18, 33, 15),
@@ -157,6 +159,15 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                   if (!isError)
                                     Center(
                                       child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: kBlack,
+                                          elevation: 2,
+                                          shape: const SmoothRectangleBorder(
+                                            borderRadius: SmoothBorderRadius.all(
+                                              SmoothRadius(cornerRadius: 22, cornerSmoothing: 1),
+                                            ),
+                                          ),
+                                        ),
                                         onPressed: () async {
                                           DatabaseHolder db = context.read<DatabaseHolder>();
                                           if (!db.isOfflineMode) {
@@ -188,7 +199,10 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                           db.lastScanned.insert(0, ticket!);
                                           widget.dismiss();
                                         },
-                                        child: const Text("Cette personne est entrée"),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
+                                          child: Text("Valider l'entrée", style: h3.apply(color: kWhite),),
+                                        ),
                                       ),
                                     ),
                                   if (ticket != null && ticket!.nom != "" && ticket!.hasEntered == true)
@@ -201,18 +215,33 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                       height: 20,
                                     ),
                                   if (ticket != null && ticket!.nom != "" && ticket!.hasEntered == true)
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        widget.dismiss();
-                                      },
-                                      child: const Text("Annuler"),
+                                    Padding(
+                                      padding: const EdgeInsets.only(top:10.0,bottom: 16.0),
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: kBlack,
+                                          elevation: 2,
+                                          shape: const SmoothRectangleBorder(
+                                            borderRadius: SmoothBorderRadius.all(
+                                              SmoothRadius(cornerRadius: 16, cornerSmoothing: 1),
+                                            ),
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          widget.dismiss();
+                                        },
+                                        child:  Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+                                          child: Text("Annuler", style: bodyTitle.apply(color: kWhite),),
+                                        ),
+                                      ),
                                     ),
                                   if (ticket != null && ticket!.nom != "" && ticket!.hasEntered == true)
                                     TextButton(
                                       onPressed: () {},
                                       onLongPress: () async {
                                         DatabaseHolder db = context.read<DatabaseHolder>();
-                                        if(!db.isOfflineMode){
+                                        if (!db.isOfflineMode) {
                                           Response result = await httpCall(
                                               "/ticket/editEnterStatus", HttpMethod.post, widget.apiUrl!,
                                               body: jsonEncode(

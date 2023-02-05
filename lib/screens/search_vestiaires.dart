@@ -23,7 +23,7 @@ class SearchVestiaires extends StatefulWidget {
 }
 
 class _SearchVestiairesState extends State<SearchVestiaires> {
-  SearchBy searchBy = SearchBy.prenom;
+  SearchBy searchBy = SearchBy.global;
   String searchText = "";
   TextEditingController controller = TextEditingController();
   List<Ticket> searchResults = [];
