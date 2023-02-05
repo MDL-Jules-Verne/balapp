@@ -7,6 +7,7 @@ class CustomTextInput extends StatelessWidget {
       required this.controller,
       this.label,
       this.formatter,
+        this.showBottomLine = true,
       this.callback,
       this.padding = const EdgeInsets.fromLTRB(8, 24, 12, 13),
       this.showLabelText = true, this.fontSize = 20})
@@ -16,6 +17,7 @@ class CustomTextInput extends StatelessWidget {
   final double fontSize;
   final List<TextInputFormatter>? formatter;
   final bool showLabelText;
+  final bool showBottomLine;
   final void Function(String?)? callback;
   final EdgeInsets padding;
 
@@ -46,12 +48,14 @@ class CustomTextInput extends StatelessWidget {
           inputFormatters: formatterNew,
           // enableIMEPersonalizedLearning: false,
           decoration: InputDecoration(
-            // border: const OutlineInputBorder(),
+            border: showBottomLine ? InputBorder.none : null,
             contentPadding: padding,
             hintText: label,
+            // hintStyle: TextStyle(fontSize: fontSize*0.7)
           ),
           style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w500),
           controller: controller,
+
         ),
       ],
     );

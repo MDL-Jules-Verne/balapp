@@ -138,26 +138,29 @@ class Settings extends StatelessWidget {
               const SizedBox(height: 19,),
               Consumer<DatabaseHolder>(
                 builder: (context, db, _) {
-                  return ListTile(
-                    shape: SmoothRectangleBorder(
-                      borderRadius: SmoothBorderRadius(
-                        cornerRadius: 15,
-                        cornerSmoothing: 1,
+                  return Opacity(
+                    opacity: !db.isOfflineMode ? .34 : 1,
+                    child: ListTile(
+                      shape: SmoothRectangleBorder(
+                        borderRadius: SmoothBorderRadius(
+                          cornerRadius: 15,
+                          cornerSmoothing: 1,
+                        ),
                       ),
+                      onTap: !db.isOfflineMode ? null : () async {
+                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        await prefs.setString("appMode", db.appMode == AppMode.buy ? 'bal' : 'buy');
+                        db.restartApp();
+                      },
+                      // contentPadding: EdgeInsets.fromLTRB(4.w, 1.h, 3.w, 1.h),
+                      iconColor: Colors.black,
+                      leading: const Icon(
+                        Icons.compare_arrows,
+                        size: 42,
+                      ),
+                      title: const Text("Changer de mode", style: bodyTitle,),
+                      subtitle: Text("Passer en mode ${db.appMode == AppMode.buy ? 'bal' : 'buy'}\nRedémarre l'application", style: body),
                     ),
-                    onTap: () async {
-                      SharedPreferences prefs = await SharedPreferences.getInstance();
-                      await prefs.setString("appMode", db.appMode == AppMode.buy ? 'bal' : 'buy');
-                      db.restartApp();
-                    },
-                    // contentPadding: EdgeInsets.fromLTRB(4.w, 1.h, 3.w, 1.h),
-                    iconColor: Colors.black,
-                    leading: const Icon(
-                      Icons.compare_arrows,
-                      size: 42,
-                    ),
-                    title: const Text("Changer de mode", style: bodyTitle,),
-                    subtitle: Text("Passer en mode ${db.appMode == AppMode.buy ? 'bal' : 'buy'}\nRedémarre l'application", style: body),
                   );
                 }
               ),

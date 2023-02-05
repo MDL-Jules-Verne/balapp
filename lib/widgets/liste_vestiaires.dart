@@ -88,60 +88,31 @@ class _ListeVestiairesState extends State<ListeVestiaires> {
                         // return Container();
                       },
                       itemBuilder: (context, index) {
-                        return Stack(
-                          children: [
-                            ClipSmoothRect(
-                              radius: SmoothBorderRadius(
-                                cornerRadius: 18,
-                                cornerSmoothing: 1,
-                              ),
-                              child: Material(
-                                color: /*ticketState[index] == true ? kBlack.withOpacity(0.2) : */ Colors.transparent,
-                                child: InkWell(
-                                  onLongPress: () {
-                                    widget.removeTicket(index);
-                                  },
-                                  onTap: () {
-                                    setState(() {
-                                      ticketState[index] = !ticketState[index];
-                                    });
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                                    child: TicketDetailsMedium(widget.tickets[index]),
-                                  ),
+                        return Opacity(
+                          opacity: ticketState[index] == true ? .34 : 1,
+                          child: ClipSmoothRect(
+                            radius: SmoothBorderRadius(
+                              cornerRadius: 18,
+                              cornerSmoothing: 1,
+                            ),
+                            child: Material(
+                              color: /*ticketState[index] == true ? kBlack.withOpacity(0.2) : */ Colors.transparent,
+                              child: InkWell(
+                                onLongPress: () {
+                                  widget.removeTicket(index);
+                                },
+                                onTap: () {
+                                  setState(() {
+                                    ticketState[index] = !ticketState[index];
+                                  });
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                                  child: TicketDetailsMedium(widget.tickets[index]),
                                 ),
                               ),
                             ),
-                            if (ticketState[index] == true)
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                bottom: 0,
-                                child: Center(
-                                  child: Transform.rotate(
-                                    angle: pi / 24,
-                                    child: const HorizontalLine(
-                                      height: 3,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            if (ticketState[index] == true)
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                bottom: 0,
-                                child: Center(
-                                  child: Transform.rotate(
-                                    angle: -pi / 24,
-                                    child: const HorizontalLine(
-                                      height: 3,
-                                    ),
-                                  ),
-                                ),
-                              )
-                          ],
+                          ),
                         );
                       },
                     )

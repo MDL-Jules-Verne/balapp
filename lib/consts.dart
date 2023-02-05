@@ -86,18 +86,33 @@ List<Ticket> searchAlgorithm(SearchBy searchBy, List<Ticket> fullList, String se
     if (searchBy.isDropdown == true) {
       return el.toJson()[searchBy.keyValue].toLowerCase() == searchValue.toLowerCase();
     } else {
-      String text = el.toJson()[searchBy.keyValue];
-      text = text.toLowerCase();
-      Map<String, int> lastSeenChar = {};
-      int totalCorrectChars = 0;
-      for (String char in searchValue.characters) {
-        int charIndex = text.indexOf(char, (lastSeenChar[char] ?? -1) + 1);
-        if (charIndex != -1) {
-          lastSeenChar[char] = charIndex;
-          totalCorrectChars += 1;
+
+      var x = [SearchBy.prenom, SearchBy.id, SearchBy.nom];
+      bool hasFoundOne = false;
+      for(int i=0; i< (searchBy.isGlobal ? x.length : 1); i++) {
+        SearchBy searchBy1;
+        if(searchBy.isGlobal) {
+          searchBy1 = x[i];
+        } else {
+          searchBy1 = searchBy;
+        }
+        String text = el.toJson()[searchBy1.keyValue];
+        text = text.toLowerCase();
+        Map<String, int> lastSeenChar = {};
+        int totalCorrectChars = 0;
+        for (String char in searchValue.characters) {
+          int charIndex = text.indexOf(char, (lastSeenChar[char] ?? -1) + 1);
+          if (charIndex != -1) {
+            lastSeenChar[char] = charIndex;
+            totalCorrectChars += 1;
+          }
+        }
+        if(totalCorrectChars == searchValue.length){
+          hasFoundOne = true;
+          break;
         }
       }
-      return totalCorrectChars == searchValue.length;
+      return hasFoundOne;
     }
   }).toList();
   fullList.sort((a, b) {
@@ -110,21 +125,33 @@ List<Ticket> searchAlgorithm(SearchBy searchBy, List<Ticket> fullList, String se
 }
 
 double searchScore(Ticket b, SearchBy searchBy, String searchValue) {
-  String text = b.toJson()[searchBy.keyValue].toLowerCase();
-  double maxLength = 0;
-  for (int i = 0; i < searchValue.length; i++) {
-    if (text.startsWith(searchValue.substring(0, i + 1))) {
-      maxLength = i + 2.1; // One bonus point bc the string is correct
-      // from the start (not really working)
-    } else if (text.contains(searchValue.substring(0, i + 1))) {
-      maxLength = i + 1;
+  var x = [SearchBy.prenom, SearchBy.id, SearchBy.nom];
+  double score  = 0;
+  for(int i=0; i< (searchBy.isGlobal ? x.length : 1); i++) {
+    SearchBy searchBy1;
+    if(searchBy.isGlobal) {
+      searchBy1 = x[i];
+    } else {
+      searchBy1 = searchBy;
     }
+  String text = b.toJson()[searchBy1.keyValue].toLowerCase();
+    double maxLength = 0;
+    for (int i = 0; i < searchValue.length; i++) {
+      if (text.startsWith(searchValue.substring(0, i + 1))) {
+        maxLength = i + 2.1; // One bonus point bc the string is correct
+        // from the start (not really working)
+      } else if (text.contains(searchValue.substring(0, i + 1))) {
+        maxLength = i + 1;
+      }
+    }
+    score += maxLength;
   }
-  return maxLength;
+  return score;
 }
 
 enum SearchBy {
   prenom("Prénom", false, "prenom"),
+  global("Global", false, "global", isGlobal: true),
   id("Id", false, "id"),
   nom("Nom", false, "nom"),
   vendeur("Vendeur", false, "whoEntered"),
@@ -134,11 +161,12 @@ enum SearchBy {
   none("Aucun", false, "none"),
   ;
 
-  const SearchBy(this.value, this.isDropdown, this.keyValue);
+  const SearchBy(this.value, this.isDropdown, this.keyValue, {this.isGlobal = false});
 
   final bool isDropdown;
   final String value;
   final String keyValue;
+  final bool isGlobal;
 
   @override
   String toString() {

@@ -62,8 +62,10 @@ class _SearchBarState extends State<SearchBar> {
           children: [
             if (searchBy.isDropdown == false)
               SizedBox(
-                width: 30.w,
+                width: 45.w,
                 child: CustomTextInput(
+                  label: "Tap to search",
+                  showLabelText: false,
                   callback: (String? text) {
                     widget.updateSearch(searchAlgorithm(widget.controller.text == "" ? SearchBy.none : searchBy,
                         List<Ticket>.from(widget.db.db), widget.controller.text, showUnregisteredTickets));
@@ -125,6 +127,7 @@ class _SearchBarState extends State<SearchBar> {
                       items: [
                         for (SearchBy searchKey in const [
                           SearchBy.prenom,
+                          SearchBy.global,
                           SearchBy.id,
                           SearchBy.nom,
                           SearchBy.vendeur,

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:balapp/consts.dart';
 import 'package:balapp/utils/database_holder.dart';
 import 'package:balapp/utils/ticket.dart';
+import 'package:balapp/widgets/horizontal_line.dart';
 import 'package:balapp/widgets/liste_vestiaires.dart';
 import 'package:balapp/widgets/searchBar.dart';
 import 'package:balapp/widgets/ticket_details.dart';
@@ -59,11 +60,7 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
 
   @override
   Widget build(BuildContext context) {
-    return PixelPerfect(
-      offset: const Offset(0, -15),
-      initBottom: 100,
-      initOpacity: 0,
-      assetPath: 'assets/Vestiaires.png',
+    return Material(
       child: ColoredBox(
         color: kWhite,
         child: Stack(
@@ -115,7 +112,10 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                         );
                       },
                       separatorBuilder: (context, int index) {
-                        return const SizedBox(height: 5);
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 22),
+                          child: HorizontalLine(color: kBlack.withOpacity(.3),),
+                        );
                       },
                       itemCount: searchResults.length,
                     ),
@@ -123,8 +123,6 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                 ],
               ),
             ),
-            Positioned(
-                bottom: 50, child: ListeVestiaires(tickets: selectedTickets, removeTicket: removeTicketFromSelected)),
             Positioned(
               right: 25,
               bottom: 35.h + 50 + 26,
@@ -183,6 +181,8 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                 ),
               ),
             ),
+            Positioned(
+                bottom: 50, child: ListeVestiaires(tickets: selectedTickets, removeTicket: removeTicketFromSelected)),
           ],
         ),
       ),
