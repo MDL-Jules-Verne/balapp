@@ -130,7 +130,7 @@ class _RegisterTicketState extends State<RegisterTicket> {
       ),
       child: Container(
         color: fatalError != null ? kRed : kWhite,
-        height: 45.h,
+        height: fatalError == null ? 45.h : 42.h,
         width: 100.w,
         child: Padding(
           padding: fatalError == null ? const EdgeInsets.fromLTRB(31, 18, 33, 0) : EdgeInsets.zero,
@@ -139,7 +139,9 @@ class _RegisterTicketState extends State<RegisterTicket> {
                   child: CircularProgressIndicator(),
                 )
               : fatalError != null
-                  ? Column(children: [
+                  ? Column(
+                    children: [
+
                       Padding(
                         padding: const EdgeInsets.fromLTRB(35, 11, 35, 9),
                         child: Row(
@@ -147,7 +149,7 @@ class _RegisterTicketState extends State<RegisterTicket> {
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.start,
-                              children: const [
+                              children: [
                                 Icon(
                                   Icons.remove_circle,
                                   // color: widget.isAlreadyEntered ? kWhite : kBlack,
@@ -157,7 +159,7 @@ class _RegisterTicketState extends State<RegisterTicket> {
                                   width: 15,
                                 ),
                                 Text(
-                                  "Ticket invalide",
+                                  fatalError ?? "",
                                   style: bodyTitle,
                                 ),
                               ],
@@ -179,47 +181,62 @@ class _RegisterTicketState extends State<RegisterTicket> {
                         fit: FlexFit.tight,
                         child: Container(
                             width: 100.w,
-                            padding: const EdgeInsets.fromLTRB(31, 18, 33, 15),
+                            padding: const EdgeInsets.fromLTRB(31, 0, 33, 15),
                             decoration: const ShapeDecoration(
                               color: kWhite,
                               shape: SmoothRectangleBorder(
                                   borderRadius:
-                                      SmoothBorderRadius.all(SmoothRadius(cornerRadius: 24, cornerSmoothing: 1))),
+                                      SmoothBorderRadius.vertical(top: SmoothRadius(cornerRadius: 24, cornerSmoothing: 1))),
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
+                                /*Text(
                                   fatalError!,
                                   style: bodyTitle.apply(color: kRed),
+                                ),*/
+                                Padding(
+                                  padding: const EdgeInsets.only(top:10.0,bottom: 16.0),
+                                  child: Text(
+                                    fatalErrorDetails ?? "",
+                                    style: body,
+                                  ),
                                 ),
-                                Text(
-                                  fatalErrorDetails ?? "",
-                                  style: body,
+                                Padding(
+                                  padding: const EdgeInsets.only(top:10.0,bottom: 16.0),
+                                  child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: kBlack,
+                                        elevation: 2,
+                                        shape: const SmoothRectangleBorder(
+                                          borderRadius: SmoothBorderRadius.all(
+                                            SmoothRadius(cornerRadius: 16, cornerSmoothing: 1),
+                                          ),
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        widget.dismiss();
+                                      },
+                                      child: const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+                                        child: Text("Annuler"),
+                                      )),
                                 ),
-                                const SizedBox(
-                                  height: 20,
-                                ),
-                                ElevatedButton(
-                                    onPressed: () {
-                                      widget.dismiss();
-                                    },
-                                    child: const Text("Annuler")),
                                 if (!fatalErrorNeedDismiss)
                                   TextButton(
                                       onLongPress: () {
                                         setState(() {
                                           firstNameController.text = ticket?.prenom ?? "";
                                           lastNameController.text = ticket?.nom ?? "";
-                                          classe = ticket?.classe ?? 0;
-                                          niveau = ticket?.niveau ?? "";
+                                          classe = ticket?.classe == 0 ? null : ticket?.classe;
+                                          niveau = ticket?.niveau == "" ? null :  ticket?.niveau;
                                           isExternal = ticket?.externe;
                                           fatalError = null;
                                           fatalErrorDetails = null;
                                         });
                                       },
                                       onPressed: () {},
-                                      child: const Text("Modifier quand même (appui long)"))
+                                      child: const Text("Modifier quand même (appui long)"),),
                               ],
                             )),
                       ),
@@ -273,7 +290,7 @@ class _RegisterTicketState extends State<RegisterTicket> {
                               Flexible(
                                 flex: 6,
                                 fit: FlexFit.tight,
-                                child: DropdownButton<String>(
+                                child:  DropdownButton<String>(
                                   isExpanded: true,
                                   value: niveau,
                                   items: [

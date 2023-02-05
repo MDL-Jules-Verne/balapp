@@ -117,7 +117,7 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                               fatalError != null
                                   ? "Erreur lors de la lecture"
                                   : ticket!.hasEntered
-                                      ? "Ticket déjà utilisé"
+                                      ? "Ticket déjà scanné"
                                       : "Ticket valide",
                               style: bodyTitle,
                             ),

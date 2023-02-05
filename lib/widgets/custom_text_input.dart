@@ -48,7 +48,7 @@ class CustomTextInput extends StatelessWidget {
           inputFormatters: formatterNew,
           // enableIMEPersonalizedLearning: false,
           decoration: InputDecoration(
-            border: showBottomLine ? InputBorder.none : null,
+            border: showBottomLine ? null : InputBorder.none,
             contentPadding: padding,
             hintText: label,
             // hintStyle: TextStyle(fontSize: fontSize*0.7)

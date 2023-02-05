@@ -37,7 +37,7 @@ String toFirstCharUpperCase(String str) {
   return str.substring(0, 1).toUpperCase() + str.substring(1);
 }
 
-const String alreadyUsedString = """Ce ticket a déjà été utilisé
+const String alreadyUsedString = """Ce ticket a déjà été scanné
 Ne rendez le ticket disponible que si vous êtes sûr·e qu'il s'agit d'une erreur""";
 const String alreadySoldString = """Ce ticket a déjà été vendu
 Ne modifiez le ticket que si vous êtes sûr·e qu'il s'agit d'une erreur""";
