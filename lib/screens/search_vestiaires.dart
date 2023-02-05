@@ -85,7 +85,7 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                   SizedBox(height: 2.h),
                   if (isLoading) const CircularProgressIndicator(),
                   SizedBox(
-                    height: 60.h,
+                    height: 40.h,
                     child: ListView.separated(
                       padding: EdgeInsets.zero,
                       shrinkWrap: true,
