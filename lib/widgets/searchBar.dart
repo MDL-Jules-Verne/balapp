@@ -4,6 +4,7 @@ import 'package:balapp/consts.dart';
 import 'package:balapp/utils/database_holder.dart';
 import 'package:balapp/utils/ticket.dart';
 import 'package:balapp/widgets/custom_text_input.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -26,10 +27,13 @@ class _SearchBarState extends State<SearchBar> {
   late SearchBy searchBy;
   late bool showUnregisteredTickets;
   SearchBy? oldSearchBy;
+  List<Ticket> oldDbValue = [];
   String? oldSearchText;
   @override
   void initState() {
+    super.initState();
     oldSearchBy = widget.searchBy;
+    oldDbValue = List.from(widget.db.db);
     oldSearchText = widget.searchText;
     showUnregisteredTickets = !widget.showUnregisteredTicketsCheckbox;
     searchBy = widget.searchBy;
@@ -38,14 +42,15 @@ class _SearchBarState extends State<SearchBar> {
   @override
   Widget build(BuildContext context) {
 
-    if (oldSearchBy != widget.searchBy || oldSearchText != widget.searchText) {
+    if (oldSearchBy != widget.searchBy || oldSearchText != widget.searchText || listEquals(oldDbValue ,widget.db.db)) {
       Timer.run(() {
         setState(() {
           oldSearchBy = widget.searchBy;
+          oldDbValue = List.from(widget.db.db);
           oldSearchText = widget.searchText;
           searchBy = widget.searchBy;
           widget.controller.text = widget.searchText ?? "";
-          showUnregisteredTickets = true;
+          // showUnregisteredTickets = true;
         });
         widget.updateSearch(searchAlgorithm(
             widget.controller.text == "" ? SearchBy.none : searchBy,

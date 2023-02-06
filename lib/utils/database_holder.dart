@@ -112,8 +112,22 @@ class DatabaseHolder extends ChangeNotifier {
 
   void _listenToStream() {
     wsStream.listen((message) async {
+      print(message);
       if (message == "testConnection") {
         ws.sink.add("testConnection");
+      } else {
+        Map messagePayload = jsonDecode(message);
+        if(messagePayload["messageType"] == "sync") {
+          Ticket ticketUpdate = Ticket.fromJson(messagePayload["fullTicket"]);
+
+        int index = db.indexWhere((element) => element.id == ticketUpdate.id);
+        if(index != -1){
+          db[index] = ticketUpdate;
+          await writeAllToDisk();
+        }
+        ws.sink.add(jsonEncode({"messageType": "updateReceived", "ticket": ticketUpdate.id}));
+        notifyListeners();
+        }
       }
     }, onDone: () {
       if (ignoreNextDisconnect == true) {
