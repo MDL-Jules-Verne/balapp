@@ -93,6 +93,8 @@ class _ScannerNewState extends State<ScannerNew> {
 
   @override
   Widget build(BuildContext context) {
+    double translateH = 12.h-40;
+    print(translateH);
     return Consumer<DatabaseHolder>(builder: (context, DatabaseHolder db, _) {
       return Scaffold(
         backgroundColor: Colors.black,
@@ -121,7 +123,7 @@ class _ScannerNewState extends State<ScannerNew> {
                         }
 
                         List<Offset> offsets =
-                            barcode.corners!.map((e) => e.translate(-40, widget.isSearch ? 100 : -40)).toList();
+                            barcode.corners!.map((e) => e.translate(-40, widget.isSearch ? translateH : -40)).toList();
                         int pointsInRect = 0;
                         for (Offset i in offsets) {
                           if (maskRect.contains(i)) pointsInRect++;
@@ -163,31 +165,7 @@ class _ScannerNewState extends State<ScannerNew> {
                 maskKey: maskKey,
                 scannerSize: scannerSize,
               ),
-              CustomIconsMenu(
-                setLightState: setLightState,
-                db: db,
-                scanControl: scanControl,
-                showSearchPanel: widget.isSearch
-                    ? null
-                    : () async {
-                        if (showSearchPanel == true) {
-                          dismissSearch();
-                        } else {
-                          searchData.changeLoadingState(true);
-                          setState(() {
-                            showSearchPanel = true;
-                          });
-                          DatabaseHolder db = context.read<DatabaseHolder>();
-                          if (!db.isOfflineMode) await db.reDownloadDb();
-                          // searchData.changeSearchParams(SearchBy.prenom, "");
-                          searchData.updateSearch(
-                            searchAlgorithm(searchData.searchText == "" ? SearchBy.none : searchData.searchBy,
-                                List.from(db.db), searchData.searchText),
-                          );
-                          searchData.changeLoadingState(false);
-                        }
-                      },
-              ),
+
 
               if (!widget.isSearch)
                 Positioned(
@@ -201,7 +179,7 @@ class _ScannerNewState extends State<ScannerNew> {
                     ),
                     child: Container(
                       color: kWhite,
-                      height: 35.h,
+                      height: 25.h+90,
                       width: 100.w,
                       child: ScanHistory(tickets: db.lastScanned),
                     ),
@@ -222,13 +200,13 @@ class _ScannerNewState extends State<ScannerNew> {
                 Positioned(bottom: 0, child: RegisterTicket(currentTicket!, db.apiUrl, dismissAll)),
               if (showSearchPanel)
                 Positioned.fill(
-                  top: 13.h,
                   child: GestureDetector(
                     onTap: () {
                       dismissSearch();
                     },
                   ),
                 ),
+
               if (showSearchPanel)
                 Positioned(
                   bottom: 0,
@@ -241,6 +219,31 @@ class _ScannerNewState extends State<ScannerNew> {
                     ),
                   ),
                 ),
+              CustomIconsMenu(
+                setLightState: setLightState,
+                db: db,
+                scanControl: scanControl,
+                showSearchPanel: widget.isSearch
+                    ? null
+                    : () async {
+                  if (showSearchPanel == true) {
+                    dismissSearch();
+                  } else {
+                    searchData.changeLoadingState(true);
+                    setState(() {
+                      showSearchPanel = true;
+                    });
+                    DatabaseHolder db = context.read<DatabaseHolder>();
+                    if (!db.isOfflineMode) await db.reDownloadDb();
+                    // searchData.changeSearchParams(SearchBy.prenom, "");
+                    searchData.updateSearch(
+                      searchAlgorithm(searchData.searchText == "" ? SearchBy.none : searchData.searchBy,
+                          List.from(db.db), searchData.searchText),
+                    );
+                    searchData.changeLoadingState(false);
+                  }
+                },
+              ),
               /*Positioned.fromRect(rect: maskRect, child: ColoredBox(color: kWhite,)),
               Positioned.fill(
                 child: CustomPaint(
@@ -287,8 +290,8 @@ class ScanMask extends StatelessWidget {
                     ),
                     child: Container(
                       key: maskKey,
-                      width: 290,
-                      height: 290,
+                      width: 22.h+90,
+                      height: 22.h+90,
                       decoration: const BoxDecoration(
                         color: Colors.black,
                         backgroundBlendMode: BlendMode.clear,

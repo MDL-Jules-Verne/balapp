@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:responsive_sizer/responsive_sizer.dart';
 
 class CustomTextInput extends StatelessWidget {
-  const CustomTextInput(
+  CustomTextInput(
       {Key? key,
       required this.controller,
       this.label,
       this.formatter,
         this.showBottomLine = true,
       this.callback,
-      this.padding = const EdgeInsets.fromLTRB(8, 24, 12, 13),
+      this.padding,
       this.showLabelText = true, this.fontSize = 20})
       : super(key: key);
   final TextEditingController controller;
@@ -19,10 +20,11 @@ class CustomTextInput extends StatelessWidget {
   final bool showLabelText;
   final bool showBottomLine;
   final void Function(String?)? callback;
-  final EdgeInsets padding;
+  EdgeInsets? padding;
 
   @override
   Widget build(BuildContext context) {
+    padding ??= EdgeInsets.fromLTRB(8, 2.6.h, 12, 1.3.h);
     List<TextInputFormatter>? formatterNew = formatter;
     formatterNew ??= [FilteringTextInputFormatter.allow(RegExp("[a-zA-Z]|-|_|,", caseSensitive: false))];
     return Column(

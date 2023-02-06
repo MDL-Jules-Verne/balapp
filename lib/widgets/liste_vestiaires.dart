@@ -44,7 +44,7 @@ class _ListeVestiairesState extends State<ListeVestiaires> {
               top: SmoothRadius(cornerRadius: 24, cornerSmoothing: 1),
             ),
           )),
-      height: isExpanded ? 90.h : 35.h,
+      height: isExpanded ? 90.h : 25.h+80,
       width: 100.w,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(22, 10, 22, 10),
@@ -75,7 +75,7 @@ class _ListeVestiairesState extends State<ListeVestiaires> {
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 7),
-              height: isExpanded ? 80.h : 25.h,
+              height: isExpanded ? 77.h : 24.5.h,
               child: widget.tickets.isNotEmpty
                   ? ListView.separated(
                       padding: EdgeInsets.zero,

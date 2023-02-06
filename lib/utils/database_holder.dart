@@ -150,7 +150,7 @@ class DatabaseHolder extends ChangeNotifier {
         retryLimit --;
       }*/
     });
-    Stream timeoutStream = wsStream.timeout(const Duration(milliseconds: kDebugMode ? 7000 : 2500), onTimeout: (_) {
+    Stream timeoutStream = wsStream.timeout(const Duration(milliseconds: kDebugMode ? 20000 : 2500), onTimeout: (_) {
       niceWsClose();
       print("clear3");
       tryReconnect();

@@ -41,7 +41,7 @@ class _SearchMiniState extends State<SearchMini> {
           ),
           child: Container(
             color: kWhite,
-            height: 45.h,
+            height: 31.h+108,
             width: 100.w,
             padding: const EdgeInsets.fromLTRB(28, 15, 16, 8),
             child: Column(

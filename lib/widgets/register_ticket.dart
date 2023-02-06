@@ -130,7 +130,7 @@ class _RegisterTicketState extends State<RegisterTicket> {
       ),
       child: Container(
         color: fatalError != null ? kRed : kWhite,
-        height: fatalError == null ? 45.h : 42.h,
+        height: fatalError == null ? 350 : 310,
         width: 100.w,
         child: Padding(
           padding: fatalError == null ? const EdgeInsets.fromLTRB(31, 18, 33, 0) : EdgeInsets.zero,
