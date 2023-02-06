@@ -187,7 +187,6 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                           } else {
                                             ticket!.hasEntered = true;
                                             ticket!.whoScanned = widget.scannerName;
-                                            print(ticket);
                                             int index = db.db.indexWhere((element) => element.id == ticket!.id);
                                             db.editAndSaveTicket(ticket!, index);
                                           }

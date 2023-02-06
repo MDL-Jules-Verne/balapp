@@ -48,9 +48,10 @@ Future<InitData?> initApp(
   bool hasUnsavedData = localDb.any((element) => element["isNotSync"] == true);
   List? data;
   String? serverUrl = prefs.getString("serverUrl");
+  print("serverUrl: $serverUrl");
   if (serverUrl != null && !hasUnsavedData) {
     data = await connectToServer(context, false, uri: Uri.parse(serverUrl), setError: (err) => print(err))
-        .timeout(const Duration(seconds: 4), onTimeout: () => null);
+        .timeout(const Duration(seconds: 3), onTimeout: () => null);
   }
 
   while (data == null && !hasUnsavedData) {

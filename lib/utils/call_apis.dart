@@ -5,7 +5,6 @@ Future<http.Response> httpCall(String path, HttpMethod method, Uri localServer, 
 
   Future<http.Response>? localCall;
   if (method == HttpMethod.get) {
-    print(localServer.replace(scheme:"http", path: path).toString());
     localCall = http.get(localServer.replace(scheme:"http", path: path));
   } else if (method == HttpMethod.post) {
     localCall = http.post(localServer.replace(scheme:"http", path: path), headers: postHeaders, body: body);

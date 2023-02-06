@@ -57,7 +57,6 @@ class SearchData extends ChangeNotifier {
   String searchText;
 
   void changeSearchParams(SearchBy searchBy, String searchText, {bool notify = true}) {
-    print("test");
     this.searchBy = searchBy;
     this.searchText = searchText;
     if (notify) notifyListeners();

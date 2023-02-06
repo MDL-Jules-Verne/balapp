@@ -60,7 +60,6 @@ class DatabaseHolder extends ChangeNotifier {
   void editAndSaveTicket(Ticket newTicket, int ticketIndex) {
     if (isOfflineMode) newTicket.isNotSync = true;
     db[ticketIndex] = newTicket;
-    print(db[ticketIndex]);
     writeAllToDisk();
   }
 
@@ -72,7 +71,6 @@ class DatabaseHolder extends ChangeNotifier {
 
   void stopOfflineMode(Uri apiUrl) async {
     List<Ticket> unsavedTickets = db.where((element) => element.isNotSync == true).toList();
-    print(unsavedTickets.map((e) => e.toJson()));
     Response result = await httpCall("/syncOfflineMode", HttpMethod.post, apiUrl,
         body: jsonEncode(unsavedTickets.map((e) => e.toJson()).toList()));
     if (result.statusCode < 200 && result.statusCode > 299) {
@@ -112,7 +110,6 @@ class DatabaseHolder extends ChangeNotifier {
 
   void _listenToStream() {
     wsStream.listen((message) async {
-      print(message);
       if (message == "testConnection") {
         ws.sink.add("testConnection");
       } else {
@@ -153,11 +150,9 @@ class DatabaseHolder extends ChangeNotifier {
         retryLimit --;
       }*/
     });
-    Stream timeoutStream = wsStream.timeout(const Duration(milliseconds: kDebugMode ? 12000 : 2000), onTimeout: (_) {
+    Stream timeoutStream = wsStream.timeout(const Duration(milliseconds: kDebugMode ? 7000 : 2500), onTimeout: (_) {
       niceWsClose();
       print("clear3");
-      isWebsocketOpen = false;
-      notifyListeners();
       tryReconnect();
     });
     timeoutStreamSubscription = timeoutStream.listen((event) {});

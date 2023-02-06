@@ -1,5 +1,3 @@
-
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -22,7 +20,6 @@ class ConnectDialog extends StatefulWidget {
   final SharedPreferences? prefs;
   final String? presetIp;
 
-
   @override
   State<ConnectDialog> createState() => _ConnectDialogState();
 }
@@ -33,7 +30,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
   int skipButtonTap = 0;
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     controller.text = widget.presetIp ?? "";
   }
@@ -48,7 +45,7 @@ class _ConnectDialogState extends State<ConnectDialog> {
           const Text("Enter IP address of local server"),
           CustomTextInput(
             controller: controller,
-            formatter: [FilteringTextInputFormatter.deny(" ") ],
+            formatter: [FilteringTextInputFormatter.deny(" ")],
             padding: const EdgeInsets.fromLTRB(8, 13, 12, 13),
           ),
           if (error != null)
@@ -59,21 +56,21 @@ class _ConnectDialogState extends State<ConnectDialog> {
         ],
       ),
       actions: [
-          TextButton(
-              onPressed: () {
-                skipButtonTap++;
-                if (skipButtonTap == 7) {
-                  Navigator.pop(context, []);
-                }
-              },
-              child: const Text(
-                "Skip (tap multiple times)",
-                style: TextStyle(color: Colors.black38),
-              )),
+        TextButton(
+            onPressed: () {
+              skipButtonTap++;
+              if (skipButtonTap == 7) {
+                Navigator.pop(context, []);
+              }
+            },
+            child: const Text(
+              "Skip (tap multiple times)",
+              style: TextStyle(color: Colors.black38),
+            )),
         TextButton(
           child: const Text("Confirm"),
           onPressed: () {
-            connectToServer( context, true,
+            connectToServer(context, true,
                 setError: (newErr) => setState(() => error = newErr), uri: Uri.parse("ws://${controller.text}"));
 
             /*dynamic result;
@@ -109,22 +106,25 @@ class _ConnectDialogState extends State<ConnectDialog> {
 }
 
 Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setError, required Uri uri}) async {
-
-
   WebSocketChannel channel;
-  try{
-      channel = WebSocketChannel.connect(uri);
+  try {
+    channel = WebSocketChannel.connect(uri);
   } on SocketException {
     return null;
-  } catch(e,s){
+  } catch (e, s) {
     print(e);
     print(s);
     return null;
   }
-  StreamSubscription? sub;
+
   Stream broadcast = channel.stream.asBroadcastStream();
-  sub = broadcast.listen((event) async {
-    if(event == "testConnection") return;
+  Timer.run((){
+    channel.sink.add("hello");
+  });
+  await for (var event in broadcast) {
+    if (event == "testConnection") {
+      continue;
+    }
     String? mode;
     List? db;
     try {
@@ -135,26 +135,37 @@ Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setErr
       print(e);
       if (setError != null) setError("Error parsing message");
       channel.sink.close();
-      if(!fromPopup) Navigator.pop(context);
-      return;
+      return null;
     }
     AppMode? appMode = AppMode.getByString(mode ?? '');
     if (appMode == null) {
       channel.sink.close();
       if (setError != null) setError("This AppMode doesn't exist");
-      if(!fromPopup) Navigator.pop(context);
-      return;
+      return null;
     }
-      sub?.cancel();
-      channel.sink.close();
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString("serverUrl", uri.toString());
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("serverUrl", uri.toString());
+    print("setServerUrl");
+    channel.sink.close();
+    if (fromPopup) {
       Navigator.pop(context, [uri, appMode, db, channel, broadcast]);
-  });
-  channel.sink.add('hello');
-  if(!fromPopup) {
-    return await Navigator.push(context,  PageRouteBuilder(opaque: false,pageBuilder: (_, __, ___) => Container(),
-  ),);
+    } else {
+      return [uri, appMode, db, channel, broadcast];
+    }
   }
+  /*if (!fromPopup) {
+    return await Navigator.push(
+      context,
+      TranslucentRoute(
+        opaque: false,
+        pageBuilder: (_, __, ___) => Container(),
+        transitionBuilder:
+            (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) {
+          return Container();
+        },
+      ),
+    );
+  }*/
   return null;
 }
