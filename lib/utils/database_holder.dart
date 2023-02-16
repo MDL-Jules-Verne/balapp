@@ -29,7 +29,6 @@ class DatabaseHolder extends ChangeNotifier {
   StreamSubscription? timeoutStreamSubscription;
   late WebSocketChannel ws;
   Uri? apiUrl;
-  int retryLimit = 3;
   bool ignoreNextDisconnect = false;
 
   // late List<Ticket> lastScannedGlobal;
@@ -99,9 +98,16 @@ class DatabaseHolder extends ChangeNotifier {
   void tryReconnect() async {
     if (isOfflineMode) throw Exception("Offline mode, cannot try to reconnect");
     niceWsClose();
-    List? wsData = await connectToServer(context, false, uri: apiUrl!, setError: (e) => print(e));
+    List? wsData = await connectToServer(context, false, uri: apiUrl!, setError: (e) => print(e)).timeout(const Duration(milliseconds: 7500), onTimeout: () => null);
     if (wsData != null) resetDb(wsData[2], wsData[0]);
-    // try again if this fails
+    Timer.periodic(const Duration(milliseconds: 7500), (Timer timer) async {
+      if(!isWebsocketOpen) {
+        wsData = await connectToServer(context, false, uri: apiUrl!, setError: (e) => print(e));
+        if (wsData != null) resetDb(wsData![2], wsData![0]);
+      } else {
+        timer.cancel();
+      }
+    });
   }
 
   void setContext(BuildContext context) {
@@ -109,6 +115,7 @@ class DatabaseHolder extends ChangeNotifier {
   }
 
   void _listenToStream() {
+    ws.sink.add("name$scannerName");
     wsStream.listen((message) async {
       if (message == "testConnection") {
         ws.sink.add("testConnection");
@@ -144,13 +151,8 @@ class DatabaseHolder extends ChangeNotifier {
       isWebsocketOpen = false;
       notifyListeners();
       tryReconnect();
-      /*if(retryLimit > 0){
-        ws = WebSocketChannel.connect(Uri.parse('ws://$apiUrl'));
-        channel.sink.add('Hello!');
-        retryLimit --;
-      }*/
     });
-    Stream timeoutStream = wsStream.timeout(const Duration(milliseconds: kDebugMode ? 20000 : 2500), onTimeout: (_) {
+    Stream timeoutStream = wsStream.timeout(const Duration(milliseconds: kDebugMode ? 20000 : 5000), onTimeout: (_) {
       niceWsClose();
       print("clear3");
       tryReconnect();

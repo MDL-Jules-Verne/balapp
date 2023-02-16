@@ -50,10 +50,14 @@ Future<InitData?> initApp(
   String? serverUrl = prefs.getString("serverUrl");
   print("serverUrl: $serverUrl");
   if (serverUrl != null && !hasUnsavedData) {
-    data = await connectToServer(context, false, uri: Uri.parse(serverUrl), setError: (err) => print(err))
-        .timeout(const Duration(seconds: 3), onTimeout: () => null);
+    try {
+      data = await connectToServer(context, false, uri: Uri.parse(serverUrl), setError: (err) => print(err))
+          .timeout(const Duration(seconds: 3), onTimeout: () => null);
+    } on Exception catch (e, s) {
+      // print(e)
+      // print(s);
+    }
   }
-
   while (data == null && !hasUnsavedData) {
     data = await showConnectDialog(context);
   }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:balapp/utils/ticket.dart';
 import 'package:flutter/material.dart';
@@ -86,12 +87,11 @@ List<Ticket> searchAlgorithm(SearchBy searchBy, List<Ticket> fullList, String se
       return el.toJson()[searchBy.keyValue].toLowerCase() == searchValue.toLowerCase();
     } else {
 
-      var x = [SearchBy.prenom, SearchBy.id, SearchBy.nom];
       bool hasFoundOne = false;
-      for(int i=0; i< (searchBy.isGlobal ? x.length : 1); i++) {
+      for(int i=0; i< (searchBy.isGlobal ? globalSearchKeys.length : 1); i++) {
         SearchBy searchBy1;
         if(searchBy.isGlobal) {
-          searchBy1 = x[i];
+          searchBy1 = globalSearchKeys[i];
         } else {
           searchBy1 = searchBy;
         }
@@ -106,7 +106,7 @@ List<Ticket> searchAlgorithm(SearchBy searchBy, List<Ticket> fullList, String se
             totalCorrectChars += 1;
           }
         }
-        if(totalCorrectChars == searchValue.length){
+        if(totalCorrectChars > searchValue.length/1.5){
           hasFoundOne = true;
           break;
         }
@@ -123,13 +123,13 @@ List<Ticket> searchAlgorithm(SearchBy searchBy, List<Ticket> fullList, String se
   return fullList;
 }
 
+const globalSearchKeys = [SearchBy.prenom, /*SearchBy.id,*/ SearchBy.nom];
 double searchScore(Ticket b, SearchBy searchBy, String searchValue) {
-  var x = [SearchBy.prenom, SearchBy.id, SearchBy.nom];
-  double score  = 0;
-  for(int i=0; i< (searchBy.isGlobal ? x.length : 1); i++) {
+  double score = 0;
+  for(int i = 0; i< (searchBy.isGlobal ? globalSearchKeys.length : 1); i++) {
     SearchBy searchBy1;
     if(searchBy.isGlobal) {
-      searchBy1 = x[i];
+      searchBy1 = globalSearchKeys[i];
     } else {
       searchBy1 = searchBy;
     }
@@ -143,13 +143,13 @@ double searchScore(Ticket b, SearchBy searchBy, String searchValue) {
         maxLength = i + 1;
       }
     }
-    score += maxLength;
+    score = max(score, maxLength + 1-text.length/10);
   }
   return score;
 }
 
 enum SearchBy {
-  global("Global", false, "global", isGlobal: true),
+  global("Nom/Prénom", false, "global", isGlobal: true),
   prenom("Prénom", false, "prenom"),
   id("Id", false, "id"),
   nom("Nom", false, "nom"),

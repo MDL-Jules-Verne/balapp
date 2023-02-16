@@ -80,7 +80,13 @@ class _ScannerNewState extends State<ScannerNew> {
       if (isLightOn) scanControl.toggleTorch();
     });
   }
-
+  void loadTicket(String code){
+    setState((){
+      showSearchPanel = false;
+      currentTicket = code;
+      scanControl.stop();
+    });
+  }
   void dismissSearch() {
     if (currentTicket == null) {
       dismissAll();
@@ -94,7 +100,6 @@ class _ScannerNewState extends State<ScannerNew> {
   @override
   Widget build(BuildContext context) {
     double translateH = 12.h-40;
-    print(translateH);
     return Consumer<DatabaseHolder>(builder: (context, DatabaseHolder db, _) {
       return Scaffold(
         backgroundColor: Colors.black,
@@ -213,6 +218,7 @@ class _ScannerNewState extends State<ScannerNew> {
                   child: ChangeNotifierProvider<SearchData>.value(
                     value: searchData,
                     child: SearchMini(
+                      loadTicket: loadTicket,
                       searchBy: overrideSearchBy,
                       searchText: overrideSearchString,
                       dismiss: dismissSearch,

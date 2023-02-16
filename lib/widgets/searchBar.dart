@@ -6,11 +6,12 @@ import 'package:balapp/utils/ticket.dart';
 import 'package:balapp/widgets/custom_text_input.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 class SearchBar extends StatefulWidget {
-  SearchBar({Key? key, required this.searchBy, required this.updateSearch, required this.controller, required this.db, this.showUnregisteredTicketsCheckbox = false, this.searchText})
+  SearchBar({Key? key, required this.searchBy, required this.updateSearch, required this.controller, required this.db, this.showUnregisteredTicketsCheckbox = true, this.searchText})
       : super(key: key);
   final Function(List<Ticket>) updateSearch;
   final SearchBy searchBy;
@@ -76,7 +77,7 @@ class _SearchBarState extends State<SearchBar> {
                         List<Ticket>.from(widget.db.db), widget.controller.text, showUnregisteredTickets));
                   },
                   controller: widget.controller,
-                  formatter: const [],
+                  formatter: [FilteringTextInputFormatter.allow(RegExp("[a-zA-Z0-9]|-|_|,", caseSensitive: false))],
                   fontSize: 20,
                   padding: const EdgeInsets.fromLTRB(2, 0, 12, 0),
                 ),
@@ -177,7 +178,7 @@ class _SearchBarState extends State<SearchBar> {
             )
           ],
         ),
-        if(widget.showUnregisteredTicketsCheckbox) Row(
+        /*if(widget.showUnregisteredTicketsCheckbox) Row(
           children: [
             Checkbox(
               visualDensity: VisualDensity.compact,
@@ -192,7 +193,7 @@ class _SearchBarState extends State<SearchBar> {
             ),
             Text("Montrer les tickets non vendus")
           ],
-        )
+        )*/
       ],
     );
   }

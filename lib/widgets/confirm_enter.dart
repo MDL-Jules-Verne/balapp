@@ -89,7 +89,7 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
             : isError
                 ? kRed
                 : kGreen,
-        height: isError ? 42.h: 38.h,
+        height: isError ? 42.h : 38.h,
         width: 100.w,
         child: error == null && ticket == null && fatalError == null
             ? const Center(
@@ -141,7 +141,7 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                     child: Container(
                       width: 100.w,
                       decoration: ShapeDecoration(
-                        color:  kWhite,
+                        color: kWhite,
                         shape: SmoothRectangleBorder(
                             borderRadius:
                                 SmoothBorderRadius.vertical(top: SmoothRadius(cornerRadius: 24, cornerSmoothing: 1))),
@@ -157,53 +157,68 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                 children: [
                                   //TODO: regroup different scenarios, this shit is unreadable and a mess to edit
                                   if (!isError)
-                                    Center(
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: kBlack,
-                                          elevation: 2,
-                                          shape: const SmoothRectangleBorder(
-                                            borderRadius: SmoothBorderRadius.all(
-                                              SmoothRadius(cornerRadius: 22, cornerSmoothing: 1),
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 8.0),
+                                      child: TextButton(
+                                          onPressed: () {
+                                            //TODO: go to page to edit name
+                                          },
+                                          child: Text(
+                                        "${ticket!.nom.toUpperCase()} ${toFirstCharUpperCase(ticket!.prenom)}",
+                                        style: bodyTitle,
+                                      )),
+                                    ),
+                                    if (!isError)
+                                      Center(
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: kBlack,
+                                            elevation: 2,
+                                            shape: const SmoothRectangleBorder(
+                                              borderRadius: SmoothBorderRadius.all(
+                                                SmoothRadius(cornerRadius: 22, cornerSmoothing: 1),
+                                              ),
+                                            ),
+                                          ),
+                                          onPressed: () async {
+                                            DatabaseHolder db = context.read<DatabaseHolder>();
+                                            if (!db.isOfflineMode) {
+                                              Response result = await httpCall(
+                                                  "/ticket/editEnterStatus", HttpMethod.post, widget.apiUrl!,
+                                                  body: jsonEncode({
+                                                    "id": widget.ticketId,
+                                                    "setEnter": true,
+                                                    "scannerName": widget.scannerName
+                                                  }));
+                                              if (result.statusCode < 200 && result.statusCode > 299) {
+                                                setState(() {
+                                                  error = result.body;
+                                                });
+                                                return;
+                                              }
+                                            } else {
+                                              ticket!.hasEntered = true;
+                                              ticket!.whoScanned = widget.scannerName;
+                                              int index = db.db.indexWhere((element) => element.id == ticket!.id);
+                                              db.editAndSaveTicket(ticket!, index);
+                                            }
+                                            int duplicateIndex =
+                                                db.lastScanned.indexWhere((Ticket element) => element.id == ticket!.id);
+                                            if (duplicateIndex != -1) {
+                                              db.lastScanned.removeAt(duplicateIndex);
+                                            }
+                                            db.lastScanned.insert(0, ticket!);
+                                            widget.dismiss();
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
+                                            child: Text(
+                                              "Valider l'entrée",
+                                              style: h3.apply(color: kWhite),
                                             ),
                                           ),
                                         ),
-                                        onPressed: () async {
-                                          DatabaseHolder db = context.read<DatabaseHolder>();
-                                          if (!db.isOfflineMode) {
-                                            Response result = await httpCall(
-                                                "/ticket/editEnterStatus", HttpMethod.post, widget.apiUrl!,
-                                                body: jsonEncode({
-                                                  "id": widget.ticketId,
-                                                  "setEnter": true,
-                                                  "scannerName": widget.scannerName
-                                                }));
-                                            if (result.statusCode < 200 && result.statusCode > 299) {
-                                              setState(() {
-                                                error = result.body;
-                                              });
-                                              return;
-                                            }
-                                          } else {
-                                            ticket!.hasEntered = true;
-                                            ticket!.whoScanned = widget.scannerName;
-                                            int index = db.db.indexWhere((element) => element.id == ticket!.id);
-                                            db.editAndSaveTicket(ticket!, index);
-                                          }
-                                          int duplicateIndex =
-                                              db.lastScanned.indexWhere((Ticket element) => element.id == ticket!.id);
-                                          if (duplicateIndex != -1) {
-                                            db.lastScanned.removeAt(duplicateIndex);
-                                          }
-                                          db.lastScanned.insert(0, ticket!);
-                                          widget.dismiss();
-                                        },
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
-                                          child: Text("Valider l'entrée", style: h3.apply(color: kWhite),),
-                                        ),
                                       ),
-                                    ),
                                   if (ticket != null && ticket!.nom != "" && ticket!.hasEntered == true)
                                     const Text(
                                       alreadyUsedString,
@@ -215,7 +230,7 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                     ),
                                   if (ticket != null && ticket!.nom != "" && ticket!.hasEntered == true)
                                     Padding(
-                                      padding: const EdgeInsets.only(top:10.0,bottom: 16.0),
+                                      padding: const EdgeInsets.only(top: 10.0, bottom: 16.0),
                                       child: ElevatedButton(
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: kBlack,
@@ -229,9 +244,12 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                         onPressed: () {
                                           widget.dismiss();
                                         },
-                                        child:  Padding(
+                                        child: Padding(
                                           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-                                          child: Text("Annuler", style: bodyTitle.apply(color: kWhite),),
+                                          child: Text(
+                                            "Annuler",
+                                            style: bodyTitle.apply(color: kWhite),
+                                          ),
                                         ),
                                       ),
                                     ),

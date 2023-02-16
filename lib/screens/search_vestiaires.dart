@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:balapp/consts.dart';
+import 'package:balapp/utils/call_apis.dart';
 import 'package:balapp/utils/database_holder.dart';
 import 'package:balapp/utils/ticket.dart';
 import 'package:balapp/widgets/horizontal_line.dart';
@@ -28,6 +30,7 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
   TextEditingController controller = TextEditingController();
   List<Ticket> searchResults = [];
   bool isLoading = true;
+  bool isDrinks = false;
   List<Ticket> selectedTickets = [];
   bool showUnregisteredTickets = false;
 
@@ -79,46 +82,65 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                       showUnregisteredTicketsCheckbox: true,
                     );
                   }),
+                  Row(
+                    children: [
+                      Checkbox(
+                        visualDensity: VisualDensity.compact,
+                        value: isDrinks,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            isDrinks = value!;
+                            print(isDrinks);
+                          });
+                        },
+                      ),
+                      Text("Mode boissons")
+                    ],
+                  ),
                   SizedBox(height: 2.h),
                   if (isLoading) const CircularProgressIndicator(),
                   SizedBox(
                     height: 40.h,
-                    child: ListView.separated(
-                      padding: EdgeInsets.zero,
-                      shrinkWrap: true,
-                      itemBuilder: (context, int index) {
-                        return ClipSmoothRect(
-                          radius: SmoothBorderRadius(
-                            cornerRadius: 18,
-                            cornerSmoothing: 1,
-                          ),
-                          child: Material(
-                            color: kWhite,
-                            child: InkWell(
-                              onTap: () {
-                                if (selectedTickets.any((Ticket element) => element.id == searchResults[index].id)) {
-                                  return;
-                                }
-                                setState(() {
-                                  selectedTickets.add(searchResults[index]);
-                                });
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                                child: TicketDetailsExtended(searchResults[index]),
+                    child: Consumer<DatabaseHolder>(builder: (context, db, _) {
+                      return ListView.separated(
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        itemBuilder: (context, int index) {
+                          return ClipSmoothRect(
+                            radius: SmoothBorderRadius(
+                              cornerRadius: 18,
+                              cornerSmoothing: 1,
+                            ),
+                            child: Material(
+                              color: kWhite,
+                              child: InkWell(
+                                onTap: () async {
+                                  if (selectedTickets.any((Ticket element) => element.id == searchResults[index].id)) {
+                                    return;
+                                  }
+                                  setState(() {
+                                    selectedTickets.add(searchResults[index]);
+                                  });
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                                  child: isDrinks ? TicketDetailsBar(searchResults[index]) : TicketDetailsExtended(searchResults[index]),
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                      separatorBuilder: (context, int index) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 22),
-                          child: HorizontalLine(color: kBlack.withOpacity(.3),),
-                        );
-                      },
-                      itemCount: searchResults.length,
-                    ),
+                          );
+                        },
+                        separatorBuilder: (context, int index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 22),
+                            child: HorizontalLine(
+                              color: kBlack.withOpacity(.3),
+                            ),
+                          );
+                        },
+                        itemCount: searchResults.length,
+                      );
+                    }),
                   )
                 ],
               ),
@@ -167,7 +189,8 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                           ),
                         ),*/
                         child: Row(
-                          /*mainAxisAlignment: MainAxisAlignment.spaceAround,*/ children: [
+                          /*mainAxisAlignment: MainAxisAlignment.spaceAround,*/
+                          children: [
                             const Icon(Icons.qr_code_scanner_rounded, color: kWhite, size: 28),
                             const SizedBox(
                               width: 9,

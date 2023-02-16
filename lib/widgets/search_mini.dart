@@ -12,10 +12,11 @@ import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 class SearchMini extends StatefulWidget {
-  const SearchMini({Key? key, required this.dismiss, this.searchBy, this.searchText}) : super(key: key);
+  const SearchMini({Key? key, required this.dismiss, this.searchBy, this.searchText, required this.loadTicket}) : super(key: key);
 
   final SearchBy? searchBy;
   final String? searchText;
+  final void Function(String) loadTicket;
   final void Function() dismiss;
 
   @override
@@ -78,8 +79,14 @@ class _SearchMiniState extends State<SearchMini> {
                           // return Container();
                         },
                         itemBuilder: (BuildContext context, int index) {
-                          return TicketDetailsExtended(
-                            searchData.searchResults[index],
+                          return GestureDetector(
+                            behavior: HitTestBehavior.translucent,
+                            onTap: (){
+                              widget.loadTicket(searchData.searchResults[index].id);
+                            },
+                            child: TicketDetailsExtended(
+                              searchData.searchResults[index],
+                            ),
                           );
                         },
                       );

@@ -150,12 +150,12 @@ class _RegisterTicketState extends State<RegisterTicket> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.remove_circle,
                                   // color: widget.isAlreadyEntered ? kWhite : kBlack,
                                   size: 40,
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   width: 15,
                                 ),
                                 Text(

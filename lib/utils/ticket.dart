@@ -12,6 +12,7 @@ class Ticket {
   late int classe;
   late String niveau;
   bool? isNotSync;
+  late bool hasTakenFreeDrink;
 
   @override
   String toString() {
@@ -32,7 +33,8 @@ class Ticket {
       "hasEntered": hasEntered,
       "whoEntered": whoEntered,
       "whoScanned": whoScanned,
-      "timestamps": timestamps
+      "timestamps": timestamps,
+      "hasTakenFreeDrink": hasTakenFreeDrink
     };
   }
 
@@ -49,6 +51,7 @@ class Ticket {
     salle = json["salle"];
     classe = json["classe"];
     niveau = json["niveau"] ?? "";
+    hasTakenFreeDrink = json["hasTakenFreeDrink"] ?? false;
     timestamps = json["timestamps"] ??
         {
           "registered": 0,
@@ -85,6 +88,7 @@ class Ticket {
     required this.classe,
     required this.niveau,
     required this.salle,
+    required this.hasTakenFreeDrink,
     required this.timestamps,
     this.isNotSync
   });

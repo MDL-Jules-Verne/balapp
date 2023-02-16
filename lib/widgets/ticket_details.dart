@@ -1,11 +1,19 @@
+import 'dart:convert';
+
 import 'package:balapp/consts.dart';
+import 'package:balapp/utils/call_apis.dart';
+import 'package:balapp/utils/database_holder.dart';
 import 'package:balapp/utils/ticket.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 class TicketDetails extends StatelessWidget {
-  const TicketDetails(this.ticket, {Key? key,}) : super(key: key);
+  const TicketDetails(
+    this.ticket, {
+    Key? key,
+  }) : super(key: key);
   final Ticket ticket;
 
   @override
@@ -14,10 +22,17 @@ class TicketDetails extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         IntExtDisplay(ticket),
-        SizedBox(width: 6.w,),
+        SizedBox(
+          width: 6.w,
+        ),
         NomPrenomDisplay(ticket),
-        SizedBox(width: 4.h,),
-        Text("#${ticket.id}", style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500),)
+        SizedBox(
+          width: 4.h,
+        ),
+        Text(
+          "#${ticket.id}",
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
+        )
       ],
     );
   }
@@ -25,25 +40,28 @@ class TicketDetails extends StatelessWidget {
 
 class TicketDetailsMedium extends StatelessWidget {
   final Ticket ticket;
-  const TicketDetailsMedium(this.ticket, {Key? key,}) : super(key: key);
+
+  const TicketDetailsMedium(
+    this.ticket, {
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        NomPrenomDisplay(ticket),
-        SalleId(ticket),
-        ColorDisplay(ticket)
-
-      ],
+      children: [NomPrenomDisplay(ticket), SalleId(ticket), ColorDisplay(ticket)],
     );
   }
 }
 
 class TicketDetailsExtended extends StatelessWidget {
   final Ticket ticket;
-  const TicketDetailsExtended(this.ticket, {Key? key,}) : super(key: key);
+
+  const TicketDetailsExtended(
+    this.ticket, {
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -69,14 +87,16 @@ class TicketDetailsExtended extends StatelessWidget {
         const SizedBox(
           height: 10,
         ),
-        Row( mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Flexible(
               flex: 1,
               fit: FlexFit.tight,
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Text('Entered:', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-                Text(ticket.hasEntered ? "Oui" : "Non", style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500))
+                Text(ticket.hasEntered ? "Oui" : "Non",
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500))
               ]),
             ),
             SalleId(ticket),
@@ -88,8 +108,71 @@ class TicketDetailsExtended extends StatelessWidget {
   }
 }
 
+class TicketDetailsBar extends StatelessWidget {
+  final Ticket ticket;
+
+  const TicketDetailsBar(
+    this.ticket, {
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            NomPrenomDisplay(ticket),
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Entered:', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                Text(ticket.hasEntered ? "Oui" : "Non",
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500))
+              ]),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            Text("Boisson gratuite prise: "),
+            StatefulBuilder(
+              builder: (context, setState) {
+                return Checkbox(
+                  visualDensity: VisualDensity.compact,
+                  value: ticket.hasTakenFreeDrink,
+                  onChanged: (bool? value) async {
+                    DatabaseHolder db = context.read<DatabaseHolder>();
+                    setState((){
+                      ticket.hasTakenFreeDrink = !ticket.hasTakenFreeDrink;
+                    });
+                    if (!db.isOfflineMode) {
+                      await httpCall("/freeDrink", HttpMethod.post, db.apiUrl as Uri,
+                      body: jsonEncode({
+                        "id": ticket.id,
+                        "hasTakenFreeDrink": ticket.hasTakenFreeDrink
+                      }));
+                      int i = db.db.indexWhere((element) => element.id == ticket.id);
+                      db.editAndSaveTicket(ticket, i);
+                    }
+
+                  },
+                );
+              }
+            ),
+          ],
+        )
+      ],
+    );
+  }
+}
+
 class SalleId extends StatelessWidget {
-  const SalleId(this.ticket, {Key? key, }) : super(key: key);
+  const SalleId(
+    this.ticket, {
+    Key? key,
+  }) : super(key: key);
   final Ticket ticket;
 
   @override
@@ -117,7 +200,10 @@ class SalleId extends StatelessWidget {
 }
 
 class ColorDisplay extends StatelessWidget {
-  const ColorDisplay(this.ticket, {Key? key, }) : super(key: key);
+  const ColorDisplay(
+    this.ticket, {
+    Key? key,
+  }) : super(key: key);
   final Ticket ticket;
 
   @override
@@ -157,7 +243,10 @@ class ColorDisplay extends StatelessWidget {
 }
 
 class IntExtDisplay extends StatelessWidget {
-  const IntExtDisplay(this.ticket, {Key? key, }) : super(key: key);
+  const IntExtDisplay(
+    this.ticket, {
+    Key? key,
+  }) : super(key: key);
   final Ticket ticket;
 
   @override
@@ -176,15 +265,15 @@ class IntExtDisplay extends StatelessWidget {
           color: ticket.prenom == ""
               ? Colors.grey
               : ticket.externe
-              ? kPurple
-              : kGreen),
+                  ? kPurple
+                  : kGreen),
       child: Center(
         child: Text(
           ticket.prenom == ""
               ? "?"
               : ticket.externe
-              ? "EXT"
-              : "INT",
+                  ? "EXT"
+                  : "INT",
           style: const TextStyle(
             fontSize: 13.5,
             fontWeight: FontWeight.w800,
