@@ -14,3 +14,17 @@ class HorizontalLine extends StatelessWidget {
     );
   }
 }
+
+class VerticalLine extends StatelessWidget {
+  const VerticalLine({Key? key, this.width=1, this.color=Colors.black}) : super(key: key);
+  final double width;
+  final Color color;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      color: color,
+
+    );
+  }
+}

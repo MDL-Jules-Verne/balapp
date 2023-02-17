@@ -109,7 +109,7 @@ class _MyAppState extends State<MyApp> {
                   return Banner(message: userData!.appMode.toString(),
                   location: BannerLocation.bottomEnd,
                   color: userData!.appMode == AppMode.buy ? kPurple : kRed,
-                  child: const ScannerNew());
+                  child: const ScannerNew(isLocker: false,));
                 }
               ),
               "/home": (_) => Builder(
@@ -124,9 +124,18 @@ class _MyAppState extends State<MyApp> {
               "/scannerFullScreen": (_) => Builder(
                 builder: (context) {
                   context.read<DatabaseHolder>().setContext(context);
-                  return const ScannerNew(isSearch: true);
+                  return const ScannerNew(isLocker: false, isSearch: true);
                 }
-              )
+              ),
+              "/scannerLocker": (_) => Builder(
+                  builder: (context) {
+                    context.read<DatabaseHolder>().setContext(context);
+                    return Banner(message: userData!.appMode.toString(),
+                        location: BannerLocation.bottomEnd,
+                        color: userData!.appMode == AppMode.buy ? kPurple : kRed,
+                        child: const ScannerNew(isLocker: true,));
+                  }
+              ),
             },
           ),
         );

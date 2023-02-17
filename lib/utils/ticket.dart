@@ -13,6 +13,7 @@ class Ticket {
   late String niveau;
   bool? isNotSync;
   late bool hasTakenFreeDrink;
+  late List<Cloth> clothes;
 
   @override
   String toString() {
@@ -34,7 +35,8 @@ class Ticket {
       "whoEntered": whoEntered,
       "whoScanned": whoScanned,
       "timestamps": timestamps,
-      "hasTakenFreeDrink": hasTakenFreeDrink
+      "hasTakenFreeDrink": hasTakenFreeDrink,
+      "clothes": clothes.map<Map>((Cloth e) => e.toJson()).toList(),
     };
   }
 
@@ -58,6 +60,7 @@ class Ticket {
           "entered": 0,
           "leave": 0,
         };
+    clothes = (json["clothes"] ?? []).map<Cloth>((e)=>Cloth.fromJson(e)).toList();
   }
 
   /// This is used in TicketWithIndex
@@ -117,3 +120,33 @@ class TicketWithIndex extends Ticket {
       required this.index});
 }
 */
+class Cloth{
+  late String clothType;
+  late int idNumber;
+  late int place;
+  Cloth({required this.clothType, required this.idNumber, required this.place});
+  Cloth.fromJson(Map json){
+    if(json["clothType"] == null || json["idNumber"] == null || json["place"] == null){
+      throw Exception("Clothe is not parsable");
+    }
+    clothType = json["clothType"];
+    idNumber = json["idNumber"];
+    place = json["place"];
+
+  }
+  String toCode(){
+    return "$idNumber${clothType == "Relou" ? "R" : idNumber<=4 ? "A" : "B"}${place<10 ? "0" : ""}$place";
+  }
+  Map toJson(){
+    return {
+      "clothType": clothType,
+      "idNumber": idNumber,
+      "place": place
+    };
+  }
+  @override
+  String toString() {
+    return "Cloth(${toJson()})";
+  }
+}
+const String letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

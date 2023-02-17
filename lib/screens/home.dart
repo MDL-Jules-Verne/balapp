@@ -1,9 +1,19 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:convert';
+
 import 'package:balapp/consts.dart';
 import 'package:balapp/screens/search_vestiaires.dart';
 import 'package:balapp/screens/settings.dart';
+import 'package:balapp/utils/database_holder.dart';
 import 'package:balapp/widgets/custom_icon_button.dart';
+import 'package:balapp/widgets/dialogs/lockersPopup.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
+import 'package:provider/provider.dart';
+
+import '../utils/call_apis.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -14,7 +24,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   late List<ButtonDetails> buttons;
-  int selectedButton = 1;
+  int selectedButton = 2;
 
   @override
   void initState() {
@@ -25,17 +35,31 @@ class _HomeState extends State<Home> {
             Navigator.pushNamed(context, "/scanner");
           },
           icon: Icons.qr_code_scanner_rounded),
+      ButtonDetails(onTap: () async {
+        DatabaseHolder db = context.read<DatabaseHolder>();
+        Response result = await httpCall("/clothes/lockersList", HttpMethod.get, db.apiUrl!);
+        if (result.statusCode >= 200 && result.statusCode < 299) {
+          List<bool>? availableLockers = await showLockerPopup(context, jsonDecode(result.body).map<String>((e)=>e.toString()).toList());
+          if(availableLockers == null) return;
+          // todo: passer ça en param et le passer au moment de get l'id
+          // TODO: Rajouter compteur de place et c'est bon pour l'entrée
+          Navigator.pushNamed(context, "/scannerLocker");
+        } else {
+          throw Exception("Bad response from server, cannot get lockers");
+        }
+        // todo: offline mode
+      }, icon: Icons.checkroom),
       ButtonDetails(
           onTap: () {
             setState(() {
-              selectedButton = 1;
+              selectedButton = 2;
             });
           },
           icon: Icons.home_outlined),
       ButtonDetails(
           onTap: () {
             setState(() {
-              selectedButton = 2;
+              selectedButton = 3;
             });
           },
           icon: Icons.settings),
@@ -46,7 +70,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        selectedButton == 1 ? const SearchVestiaires() : const Settings(),
+        selectedButton == 2 ? const SearchVestiaires() : const Settings(),
         Positioned(
           bottom: 0,
           left: 0,

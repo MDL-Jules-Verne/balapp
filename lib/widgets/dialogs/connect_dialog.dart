@@ -146,7 +146,6 @@ Future<List?> connectToServer(context, bool fromPopup, {Function(String)? setErr
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("serverUrl", uri.toString());
-    print("setServerUrl");
     channel.sink.close();
     if (fromPopup) {
       Navigator.pop(context, [uri, appMode, db, channel, broadcast]);

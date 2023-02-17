@@ -6,6 +6,7 @@ import 'package:balapp/utils/database_holder.dart';
 import 'package:balapp/utils/init_future.dart';
 import 'package:balapp/widgets/confirm_enter.dart';
 import 'package:balapp/widgets/custom_icons_menu.dart';
+import 'package:balapp/widgets/enter_locker.dart';
 import 'package:balapp/widgets/qr_code_corners.dart.old';
 import 'package:balapp/widgets/register_ticket.dart';
 import 'package:balapp/widgets/scan_history.dart';
@@ -19,8 +20,9 @@ import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 class ScannerNew extends StatefulWidget {
-  const ScannerNew({Key? key, this.isSearch = false}) : super(key: key);
+  const ScannerNew({Key? key, required this.isLocker, this.isSearch = false}) : super(key: key);
   final bool isSearch;
+  final bool isLocker;
 
   @override
   State<ScannerNew> createState() => _ScannerNewState();
@@ -80,13 +82,15 @@ class _ScannerNewState extends State<ScannerNew> {
       if (isLightOn) scanControl.toggleTorch();
     });
   }
-  void loadTicket(String code){
-    setState((){
+
+  void loadTicket(String code) {
+    setState(() {
       showSearchPanel = false;
       currentTicket = code;
       scanControl.stop();
     });
   }
+
   void dismissSearch() {
     if (currentTicket == null) {
       dismissAll();
@@ -99,7 +103,7 @@ class _ScannerNewState extends State<ScannerNew> {
 
   @override
   Widget build(BuildContext context) {
-    double translateH = 12.h-40;
+    double translateH = 12.h - 40;
     return Consumer<DatabaseHolder>(builder: (context, DatabaseHolder db, _) {
       return Scaffold(
         backgroundColor: Colors.black,
@@ -171,8 +175,7 @@ class _ScannerNewState extends State<ScannerNew> {
                 scannerSize: scannerSize,
               ),
 
-
-              if (!widget.isSearch)
+              if (!widget.isSearch && !widget.isLocker)
                 Positioned(
                   bottom: 0,
                   child: ClipSmoothRect(
@@ -184,14 +187,36 @@ class _ScannerNewState extends State<ScannerNew> {
                     ),
                     child: Container(
                       color: kWhite,
-                      height: 25.h+90,
+                      height: 25.h + 90,
                       width: 100.w,
                       child: ScanHistory(tickets: db.lastScanned),
                     ),
                   ),
                 ),
               // if(offsets.isNotEmpty)Positioned.fill(child: CustomPaint(size: Size(100.w, 100.h,), painter: QrCodePainter(offsets, squareColor),)),
-              if (db.appMode == AppMode.bal && currentTicket != null)
+              if (db.appMode == AppMode.bal && currentTicket != null && widget.isLocker)
+                Positioned(
+                  bottom: 0,
+                  child: ClipSmoothRect(
+                    radius: const SmoothBorderRadius.vertical(
+                      top: SmoothRadius(
+                        cornerRadius: 26,
+                        cornerSmoothing: 1,
+                      ),
+                    ),
+                    child: Container(
+                      color: kWhite,
+                      height: 32.h + 90,
+                      width: 100.w,
+                      child: EnterLocker(
+                        currentTicket!,
+                        dismissAll,
+                        db: db,
+                      ),
+                    ),
+                  ),
+                ),
+              if (db.appMode == AppMode.bal && currentTicket != null && !widget.isLocker)
                 Positioned(
                   bottom: 0,
                   child: ConfirmEnterTicket(
@@ -201,7 +226,7 @@ class _ScannerNewState extends State<ScannerNew> {
                     scannerName: db.scannerName,
                   ),
                 ),
-              if (db.appMode == AppMode.buy && currentTicket != null)
+              if (db.appMode == AppMode.buy && currentTicket != null && !widget.isLocker)
                 Positioned(bottom: 0, child: RegisterTicket(currentTicket!, db.apiUrl, dismissAll)),
               if (showSearchPanel)
                 Positioned.fill(
@@ -232,23 +257,23 @@ class _ScannerNewState extends State<ScannerNew> {
                 showSearchPanel: widget.isSearch
                     ? null
                     : () async {
-                  if (showSearchPanel == true) {
-                    dismissSearch();
-                  } else {
-                    searchData.changeLoadingState(true);
-                    setState(() {
-                      showSearchPanel = true;
-                    });
-                    DatabaseHolder db = context.read<DatabaseHolder>();
-                    if (!db.isOfflineMode) await db.reDownloadDb();
-                    // searchData.changeSearchParams(SearchBy.prenom, "");
-                    searchData.updateSearch(
-                      searchAlgorithm(searchData.searchText == "" ? SearchBy.none : searchData.searchBy,
-                          List.from(db.db), searchData.searchText),
-                    );
-                    searchData.changeLoadingState(false);
-                  }
-                },
+                        if (showSearchPanel == true) {
+                          dismissSearch();
+                        } else {
+                          searchData.changeLoadingState(true);
+                          setState(() {
+                            showSearchPanel = true;
+                          });
+                          DatabaseHolder db = context.read<DatabaseHolder>();
+                          if (!db.isOfflineMode) await db.reDownloadDb();
+                          // searchData.changeSearchParams(SearchBy.prenom, "");
+                          searchData.updateSearch(
+                            searchAlgorithm(searchData.searchText == "" ? SearchBy.none : searchData.searchBy,
+                                List.from(db.db), searchData.searchText),
+                          );
+                          searchData.changeLoadingState(false);
+                        }
+                      },
               ),
               /*Positioned.fromRect(rect: maskRect, child: ColoredBox(color: kWhite,)),
               Positioned.fill(
@@ -296,8 +321,8 @@ class ScanMask extends StatelessWidget {
                     ),
                     child: Container(
                       key: maskKey,
-                      width: 22.h+90,
-                      height: 22.h+90,
+                      width: 22.h + 90,
+                      height: 22.h + 90,
                       decoration: const BoxDecoration(
                         color: Colors.black,
                         backgroundBlendMode: BlendMode.clear,
