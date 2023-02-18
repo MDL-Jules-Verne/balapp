@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
+import 'enter_locker.dart';
+
 class TicketDetails extends StatelessWidget {
   const TicketDetails(
     this.ticket, {
@@ -48,9 +50,40 @@ class TicketDetailsMedium extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [NomPrenomDisplay(ticket), SalleId(ticket), ColorDisplay(ticket)],
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            NomPrenomDisplay(ticket),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+              decoration: ShapeDecoration(
+                color: kBlack,
+                shape: SmoothRectangleBorder(
+                  borderRadius: SmoothBorderRadius(
+                    cornerRadius: 15,
+                    cornerSmoothing: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  for (Cloth i in ticket.clothes)
+                    MiniCloth(
+                      ticket: ticket,
+                      setLittleError: (String? error) => null,
+                      removeCloth: (int index) => null,
+                      cloth: i,
+                      db: context.read<DatabaseHolder>(),
+                    )
+                ],
+              ),
+            )
+
+          ],
+        ),
+      ],
     );
   }
 }
@@ -90,9 +123,8 @@ class TicketDetailsExtended extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Flexible(
-              flex: 1,
-              fit: FlexFit.tight,
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Text('Entered:', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
                 Text(ticket.hasEntered ? "Oui" : "Non",
@@ -100,7 +132,11 @@ class TicketDetailsExtended extends StatelessWidget {
               ]),
             ),
             SalleId(ticket),
-            ColorDisplay(ticket),
+            // ColorDisplay(ticket),
+            Text(
+              "#${ticket.id}",
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
+            )
           ],
         )
       ],
@@ -135,32 +171,40 @@ class TicketDetailsBar extends StatelessWidget {
           ],
         ),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Boisson gratuite prise: "),
-            StatefulBuilder(
-              builder: (context, setState) {
-                return Checkbox(
-                  visualDensity: VisualDensity.compact,
-                  value: ticket.hasTakenFreeDrink,
-                  onChanged: (bool? value) async {
-                    DatabaseHolder db = context.read<DatabaseHolder>();
-                    setState((){
-                      ticket.hasTakenFreeDrink = !ticket.hasTakenFreeDrink;
-                    });
-                    if (!db.isOfflineMode) {
-                      await httpCall("/freeDrink", HttpMethod.post, db.apiUrl as Uri,
-                      body: jsonEncode({
-                        "id": ticket.id,
-                        "hasTakenFreeDrink": ticket.hasTakenFreeDrink
-                      }));
-                      int i = db.db.indexWhere((element) => element.id == ticket.id);
-                      db.editAndSaveTicket(ticket, i);
-                    }
-
-                  },
-                );
-              }
+            Row(
+              children: [
+                Text("Boisson gratuite prise: "),
+                StatefulBuilder(builder: (context, setState) {
+                  return Checkbox(
+                    visualDensity: VisualDensity.compact,
+                    value: ticket.hasTakenFreeDrink,
+                    onChanged: (bool? value) async {
+                      DatabaseHolder db = context.read<DatabaseHolder>();
+                      setState(() {
+                        ticket.hasTakenFreeDrink = !ticket.hasTakenFreeDrink;
+                      });
+                      if (!db.isOfflineMode) {
+                        await httpCall("/freeDrink", HttpMethod.post, db.apiUrl as Uri,
+                            body: jsonEncode({"id": ticket.id, "hasTakenFreeDrink": ticket.hasTakenFreeDrink}));
+                      } else {
+                        print("test");
+                        int i = db.db.indexWhere((element) => element.id == ticket.id);
+                        db.editAndSaveTicket(ticket, i);
+                      }
+                    },
+                  );
+                }),
+              ],
             ),
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Text(
+                "#${ticket.id}",
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
+              ),
+            )
           ],
         )
       ],
@@ -183,13 +227,13 @@ class SalleId extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Sector ${ticket.salle}",
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+          const Text(
+            "Vestiaires:",
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            "#${ticket.id}",
+            ticket.clothesString(),
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             overflow: TextOverflow.ellipsis,
           ),

@@ -12,6 +12,8 @@ import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
+import 'custom_text_input.dart';
+
 class ConfirmEnterTicket extends StatefulWidget {
   const ConfirmEnterTicket(
       {Key? key, required this.ticketId, required this.apiUrl, required this.dismiss, required this.scannerName})
@@ -27,6 +29,8 @@ class ConfirmEnterTicket extends StatefulWidget {
 }
 
 class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
+  TextEditingController firstNameController = TextEditingController();
+  TextEditingController lastNameController = TextEditingController();
   String? error;
   Ticket? ticket;
   String? fatalError;
@@ -58,13 +62,14 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
     Timer.run(() async {
       DatabaseHolder db = context.read<DatabaseHolder>();
       ticket = await loadTicket(widget.ticketId, setFatalError, setFatalErrorDetails, db);
-
       if (ticket?.nom == "") {
         setState(() {
           fatalError = "Ticket non vendu";
           fatalErrorDetails = "Ce ticket n'a pas été vendu et n'est donc pas valide";
         });
       } else {
+        firstNameController.text = ticket!.prenom;
+        lastNameController.text = ticket!.nom;
         setState(() {});
       }
     });
@@ -147,26 +152,28 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                 SmoothBorderRadius.vertical(top: SmoothRadius(cornerRadius: 24, cornerSmoothing: 1))),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(31, 18, 33, 15),
+                        padding: const EdgeInsets.fromLTRB(31, 16, 33, 12),
                         child: LayoutBuilder(builder: (context, BoxConstraints constraints) {
                           return SingleChildScrollView(
                             child: SizedBox(
                               height: constraints.maxHeight,
                               child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
                                   //TODO: regroup different scenarios, this shit is unreadable and a mess to edit
                                   if (!isError)
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 8.0),
-                                      child: TextButton(
-                                          onPressed: () {
-                                            //TODO: go to page to edit name
-                                          },
-                                          child: Text(
-                                        "${ticket!.nom.toUpperCase()} ${toFirstCharUpperCase(ticket!.prenom)}",
-                                        style: bodyTitle,
-                                      )),
+                                    CustomTextInput(
+                                      controller: firstNameController,
+                                      padding: EdgeInsets.fromLTRB(8, 1.0.h, 12, .8.h),
+                                      showLabelText: false,
+                                      label: 'Prénom',
+                                    ),
+                                  if (!isError)
+                                    CustomTextInput(
+                                      padding: EdgeInsets.fromLTRB(8, 1.0.h, 12, .8.h),
+                                      controller: lastNameController,
+                                      showLabelText: false,
+                                      label: 'Nom',
                                     ),
                                     if (!isError)
                                       Center(
@@ -188,6 +195,8 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                                   body: jsonEncode({
                                                     "id": widget.ticketId,
                                                     "setEnter": true,
+                                                    "prenom": firstNameController.text,
+                                                    "nom": lastNameController.text,
                                                     "scannerName": widget.scannerName
                                                   }));
                                               if (result.statusCode < 200 && result.statusCode > 299) {
@@ -199,6 +208,9 @@ class _ConfirmEnterTicketState extends State<ConfirmEnterTicket> {
                                             } else {
                                               ticket!.hasEntered = true;
                                               ticket!.whoScanned = widget.scannerName;
+
+                                              ticket!.prenom = firstNameController.text;
+                                              ticket!.nom = lastNameController.text;
                                               int index = db.db.indexWhere((element) => element.id == ticket!.id);
                                               db.editAndSaveTicket(ticket!, index);
                                             }

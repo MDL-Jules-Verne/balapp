@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:balapp/consts.dart';
+import 'package:balapp/utils/database_holder.dart';
 import 'package:balapp/utils/ticket.dart';
 import 'package:balapp/widgets/horizontal_line.dart';
 import 'package:balapp/widgets/ticket_details.dart';
@@ -8,9 +10,13 @@ import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
+import '../utils/call_apis.dart';
+
 class ListeVestiaires extends StatefulWidget {
-  const ListeVestiaires({Key? key, required this.tickets, required this.removeTicket}) : super(key: key);
+  const ListeVestiaires({Key? key, required this.tickets, required this.removeTicket, required this.db})
+      : super(key: key);
   final List<Ticket> tickets;
+  final DatabaseHolder db;
   final void Function(int) removeTicket;
 
   @override
@@ -44,7 +50,7 @@ class _ListeVestiairesState extends State<ListeVestiaires> {
               top: SmoothRadius(cornerRadius: 24, cornerSmoothing: 1),
             ),
           )),
-      height: isExpanded ? 90.h : 25.h+80,
+      height: isExpanded ? 90.h : 25.h + 80,
       width: 100.w,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(22, 10, 22, 10),
@@ -99,6 +105,15 @@ class _ListeVestiairesState extends State<ListeVestiaires> {
                               color: /*ticketState[index] == true ? kBlack.withOpacity(0.2) : */ Colors.transparent,
                               child: InkWell(
                                 onLongPress: () {
+                                  if (!widget.db.isOfflineMode) {
+                                    httpCall("/clothes/setLastRemove", HttpMethod.post, widget.db.apiUrl!,
+                                        body: jsonEncode({"id": widget.tickets[index].id}));
+                                  } else {
+                                    widget.tickets[index].timestamps["leave"] = DateTime.now().millisecondsSinceEpoch;
+                                    int i =
+                                        widget.db.db.indexWhere((element) => element.id == widget.tickets[index].id);
+                                    widget.db.editAndSaveTicket(widget.tickets[index], i);
+                                  }
                                   widget.removeTicket(index);
                                 },
                                 onTap: () {

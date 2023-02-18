@@ -33,6 +33,7 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
   bool isDrinks = false;
   List<Ticket> selectedTickets = [];
   bool showUnregisteredTickets = false;
+  late DatabaseHolder db;
 
   void updateSearch(List<Ticket> newList) {
     setState(() {
@@ -43,8 +44,8 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
   @override
   void initState() {
     super.initState();
+    db = context.read<DatabaseHolder>();
     Timer.run(() async {
-      DatabaseHolder db = context.read<DatabaseHolder>();
       if (!db.isOfflineMode) await db.reDownloadDb();
       setState(() {
         searchResults =
@@ -100,7 +101,7 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                   SizedBox(height: 2.h),
                   if (isLoading) const CircularProgressIndicator(),
                   SizedBox(
-                    height: 40.h,
+                    height: isDrinks ? 70.h : 40.h,
                     child: Consumer<DatabaseHolder>(builder: (context, db, _) {
                       return ListView.separated(
                         padding: EdgeInsets.zero,
@@ -114,7 +115,7 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                             child: Material(
                               color: kWhite,
                               child: InkWell(
-                                onTap: () async {
+                                onTap: isDrinks ? null : () async {
                                   if (selectedTickets.any((Ticket element) => element.id == searchResults[index].id)) {
                                     return;
                                   }
@@ -147,7 +148,7 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
             ),
             Positioned(
               right: 25,
-              bottom: 35.h + 50 + 26,
+              bottom: isDrinks ? 10.h + 50: 35.h + 50 + 26,
               child: Container(
                 decoration: ShapeDecoration(
                   shape: SmoothRectangleBorder(
@@ -204,8 +205,8 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                 ),
               ),
             ),
-            Positioned(
-                bottom: 50, child: ListeVestiaires(tickets: selectedTickets, removeTicket: removeTicketFromSelected)),
+            if(!isDrinks)Positioned(
+                bottom: 50, child: ListeVestiaires(tickets: selectedTickets, removeTicket: removeTicketFromSelected, db: db)),
           ],
         ),
       ),

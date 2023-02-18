@@ -32,7 +32,7 @@ Widget lockerPopup(BuildContext context, List<String> lockers) {
         actions: [
           TextButton(
             child: const Text("Finish"),
-            onPressed: () {
+            onPressed: lockersCheck.every((element) => !element) ? null : (){
               Navigator.pop(context, lockersCheck);
             },
           )

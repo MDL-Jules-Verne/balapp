@@ -33,6 +33,8 @@ class _EnterLockerState extends State<EnterLocker> {
   String? fatalErrorDetails;
   Ticket? ticket;
   String? littleError;
+  List<int> allowedLockers = [];
+  Map<String, List<Cloth>> clothMap = {};
 
   void setFatalError(String? fatalError) {
     setState(() {
@@ -53,18 +55,22 @@ class _EnterLockerState extends State<EnterLocker> {
       DatabaseHolder db = context.read<DatabaseHolder>();
       ticket = await loadTicket(widget.ticketId, setFatalError, setFatalErrorDetails, db);
       if (ticket == null) return;
+      // ignore: use_build_context_synchronously
+      allowedLockers = ModalRoute.of(context)!.settings.arguments as List<int>;
       setState(() {});
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    Map<String, List<Cloth>> bags = {
-      "Sac": ticket!.clothes.where((e) => e.clothType == "Sac").toList(),
-      "Vetement": ticket!.clothes.where((e) => e.clothType == "Vetement").toList(),
-      "Relou": ticket!.clothes.where((e) => e.clothType == "Relou").toList()
-    };
-    print(bags);
+    if (ticket != null) {
+      clothMap = {
+        "Sac": ticket!.clothes.where((e) => e.clothType == "Sac").toList(),
+        "Vetement": ticket!.clothes.where((e) => e.clothType == "Vetement").toList(),
+        "Relou": ticket!.clothes.where((e) => e.clothType == "Relou").toList()
+      };
+    }
+    print(clothMap);
     return ClipSmoothRect(
       radius: const SmoothBorderRadius.only(
         topLeft: SmoothRadius(
@@ -195,7 +201,7 @@ class _EnterLockerState extends State<EnterLocker> {
                                 const SizedBox(
                                   width: 10,
                                 ),
-                                if (bags[type]!.isNotEmpty)
+                                if (clothMap[type]!.isNotEmpty)
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                                     decoration: ShapeDecoration(
@@ -209,47 +215,14 @@ class _EnterLockerState extends State<EnterLocker> {
                                     ),
                                     child: Row(
                                       children: [
-                                        for (Cloth i in bags[type]!)
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              TextButton(
-                                                style: TextButton.styleFrom(
-                                                    foregroundColor: kWhite,
-                                                    backgroundColor: kBlack,
-                                                    minimumSize: const Size(50, 15),
-                                                    textStyle: bodyBold,
-                                                    elevation: 4),
-                                                onPressed: () async {
-                                                  Response res = await httpCall(
-                                                      "/clothes/remove", HttpMethod.post, widget.db.apiUrl as Uri,
-                                                      body: jsonEncode({
-                                                        "id": ticket!.id,
-                                                        "cloth": i.toJson(),
-                                                      }));
-                                                  if (res.statusCode >= 200 && res.statusCode < 299) {
-                                                    setState(() {
-                                                      ticket!.clothes.removeWhere((e) =>
-                                                          e.idNumber == i.idNumber &&
-                                                          e.clothType == i.clothType &&
-                                                          e.place == i.place);
-                                                      littleError = null;
-                                                    });
-                                                  } else {
-                                                    setState(() {
-                                                      littleError = res.body;
-                                                    });
-                                                  }
-                                                  // TODO offline mode
-                                                },
-                                                child: Text(i.toCode()),
-                                              ),
-                                              const VerticalLine(
-                                                width: 1,
-                                                color: kWhite,
-                                              ),
-                                            ],
-                                          ),
+                                        for (Cloth i in clothMap[type]!)
+                                          MiniCloth(
+                                            ticket: ticket!,
+                                            setLittleError: (String? error) => setState(() => littleError = error),
+                                            removeCloth: (int index) => setState(() => ticket!.clothes.removeAt(index)),
+                                            cloth: i,
+                                            db: widget.db,
+                                          )
                                       ],
                                     ),
                                   )
@@ -261,48 +234,82 @@ class _EnterLockerState extends State<EnterLocker> {
                             littleError!,
                             style: bodyTitle.apply(color: kRed),
                           ),
-                        SizedBox(height:20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            for (String type in ["Sac", "Vetement", "Relou"])
-                              ElevatedButton(
-                                onPressed: () async {
-                                  Response res =
-                                      await httpCall("/clothes/add", HttpMethod.post, widget.db.apiUrl as Uri,
-                                          body: jsonEncode({
-                                            "id": ticket!.id,
-                                            "forceLockerNumber": null, //TODO
-                                            "clothType": type,
-                                          }));
-                                  if (res.statusCode >= 200 && res.statusCode < 299) {
-                                    print(res.body);
-                                    setState(() {
-                                      ticket!.clothes.add(Cloth.fromJson(jsonDecode(res.body)));
-                                      littleError = null;
-                                    });
-                                    /*int i = widget.db.db.indexWhere((element) => element.id == ticket!.id);
+                        const SizedBox(height: 20),
+                        Flexible(
+                          flex: 1,
+                          fit: FlexFit.tight,
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                for (String type in ["Sac", "Vetement", "Relou"])
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      if (!widget.db.isOfflineMode) {
+                                        Response res =
+                                            await httpCall("/clothes/add", HttpMethod.post, widget.db.apiUrl as Uri,
+                                                body: jsonEncode({
+                                                  "id": ticket!.id,
+                                                  "forceLockerNumber": allowedLockers,
+                                                  "clothType": type,
+                                                }));
+                                        if (res.statusCode >= 200 && res.statusCode < 299) {
+                                          print(res.body);
+                                          setState(() {
+                                            ticket!.clothes.add(Cloth.fromJson(jsonDecode(res.body)));
+                                            littleError = null;
+                                          });
+                                          /*int i = widget.db.db.indexWhere((element) => element.id == ticket!.id);
 
-                        widget.db.editAndSaveTicket(ticket!, i);*/
-                                  } else {
-                                    setState(() {
-                                      littleError = res.body;
-                                    });
-                                  }
-                                  // TODO offline mode
-                                },
-                                style: ElevatedButton.styleFrom(
-                                    shape: SmoothRectangleBorder(
-                                      borderRadius: SmoothBorderRadius(
-                                        cornerRadius: 15,
-                                        cornerSmoothing: 1,
-                                      ),
-                                    ),
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: kBlack),
-                                child: Text(type),
-                              )
-                          ],
+                            widget.db.editAndSaveTicket(ticket!, i);*/
+                                        } else {
+                                          setState(() {
+                                            littleError = res.body;
+                                          });
+                                        }
+                                      } else {
+                                        List<Locker> max;
+                                        List<Locker> lockers = widget.db.getLockers();
+                                        print(lockers);
+                                        return;
+                                        if (type == "Vetement") {
+                                          max = lockers.where((e) => allowedLockers.contains(e.idNumber)).toList();
+                                          if (max.isEmpty) {
+                                            max = lockers.where((e) => allowedLockers.contains(e.idNumber - 4)).toList();
+                                          }
+                                        } else if (type == "Relou") {
+                                          max = lockers.where((e) => allowedLockers.contains(e.idNumber)).toList();
+                                        } else if (type == "Sac") {
+                                          max = lockers.where((e) => e.idNumber == 4).toList();
+                                          if (max[0] == null) {
+                                            max = lockers.where((e) => [5, 6, 7].contains(e.idNumber)).toList();
+                                            if (max.isEmpty) {
+                                              max = lockers.where((e) => [1, 2, 3].contains(e.idNumber)).toList();
+                                            }
+                                          }
+                                        }
+                                        setState(() {
+                                          // ticket!.clothes.add();
+                                          littleError = null;
+                                        });
+                                      }
+                                      // TODO offline mode
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                        shape: SmoothRectangleBorder(
+                                          borderRadius: SmoothBorderRadius(
+                                            cornerRadius: 15,
+                                            cornerSmoothing: 1,
+                                          ),
+                                        ),
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: kBlack),
+                                    child: Text(type),
+                                  )
+                              ],
+                            ),
+                          ),
                         ),
                         Flexible(
                           flex: 1,
@@ -310,7 +317,9 @@ class _EnterLockerState extends State<EnterLocker> {
                           child: Align(
                             alignment: Alignment.bottomCenter,
                             child: TextButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                widget.dismiss();
+                              },
                               style: TextButton.styleFrom(
                                 padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
                                 alignment: Alignment.topCenter,
@@ -337,6 +346,71 @@ class _EnterLockerState extends State<EnterLocker> {
                     ),
         ),
       ),
+    );
+  }
+}
+
+class MiniCloth extends StatelessWidget {
+  const MiniCloth({
+    Key? key,
+    required this.cloth,
+    required this.ticket,
+    required this.db,
+    required this.setLittleError,
+    required this.removeCloth,
+    this.isDisabled = false,
+  }) : super(key: key);
+  final Cloth cloth;
+  final DatabaseHolder db;
+  final Ticket ticket;
+  final bool isDisabled;
+  final Function(String?) setLittleError;
+  final Function(int) removeCloth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextButton(
+          style: TextButton.styleFrom(
+              foregroundColor: kWhite,
+              backgroundColor: kBlack,
+              minimumSize: const Size(50, 15),
+              textStyle: bodyBold,
+              elevation: 4),
+          onPressed: isDisabled
+              ? null
+              : () async {
+                  if (!db.isOfflineMode) {
+                    Response res = await httpCall("/clothes/remove", HttpMethod.post, db.apiUrl!,
+                        body: jsonEncode({
+                          "id": ticket.id,
+                          "cloth": cloth.toJson(),
+                        }));
+                    if (res.statusCode >= 200 && res.statusCode < 299) {
+                      int index = ticket.clothes.indexWhere((e) =>
+                      e.idNumber == cloth.idNumber && e.clothType == cloth.clothType && e.place == cloth.place);
+                      removeCloth(index);
+                      setLittleError(null);
+                    } else {
+                      setLittleError(res.body);
+                    }
+                  }else {
+                    int index = ticket.clothes.indexWhere((e) =>
+                    e.idNumber == cloth.idNumber && e.clothType == cloth.clothType && e.place == cloth.place);
+                    removeCloth(index);
+                    int i = db.db.indexWhere((element) => element.id == ticket.id);
+                    db.editAndSaveTicket(ticket, i);
+                  }
+                },
+          child: Text(cloth.toCode()),
+        ),
+        const VerticalLine(
+          width: 1,
+          color: kWhite,
+        ),
+      ],
     );
   }
 }

@@ -206,13 +206,31 @@ class _ScannerNewState extends State<ScannerNew> {
                     ),
                     child: Container(
                       color: kWhite,
-                      height: 32.h + 90,
+                      height: 40.h + 90,
                       width: 100.w,
                       child: EnterLocker(
                         currentTicket!,
                         dismissAll,
                         db: db,
                       ),
+                    ),
+                  ),
+                ),
+              if (db.appMode == AppMode.bal && currentTicket == null && widget.isLocker)
+                Positioned(
+                  bottom: 0,
+                  child: ClipSmoothRect(
+                    radius: const SmoothBorderRadius.vertical(
+                      top: SmoothRadius(
+                        cornerRadius: 26,
+                        cornerSmoothing: 1,
+                      ),
+                    ),
+                    child: Container(
+                      color: kWhite,
+                      height: 32.h + 90,
+                      width: 100.w,
+                      child: Container()
                     ),
                   ),
                 ),

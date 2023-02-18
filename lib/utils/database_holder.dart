@@ -98,10 +98,11 @@ class DatabaseHolder extends ChangeNotifier {
   void tryReconnect() async {
     if (isOfflineMode) throw Exception("Offline mode, cannot try to reconnect");
     niceWsClose();
-    List? wsData = await connectToServer(context, false, uri: apiUrl!, setError: (e) => print(e)).timeout(const Duration(milliseconds: 7500), onTimeout: () => null);
+    List? wsData = await connectToServer(context, false, uri: apiUrl!, setError: (e) => print(e))
+        .timeout(const Duration(milliseconds: 7500), onTimeout: () => null);
     if (wsData != null) resetDb(wsData[2], wsData[0]);
     Timer.periodic(const Duration(milliseconds: 7500), (Timer timer) async {
-      if(!isWebsocketOpen) {
+      if (!isWebsocketOpen) {
         wsData = await connectToServer(context, false, uri: apiUrl!, setError: (e) => print(e));
         if (wsData != null) resetDb(wsData![2], wsData![0]);
       } else {
@@ -121,16 +122,16 @@ class DatabaseHolder extends ChangeNotifier {
         ws.sink.add("testConnection");
       } else {
         Map messagePayload = jsonDecode(message);
-        if(messagePayload["messageType"] == "sync") {
+        if (messagePayload["messageType"] == "sync") {
           Ticket ticketUpdate = Ticket.fromJson(messagePayload["fullTicket"]);
 
-        int index = db.indexWhere((element) => element.id == ticketUpdate.id);
-        if(index != -1){
-          db[index] = ticketUpdate;
-          await writeAllToDisk();
-        }
-        ws.sink.add(jsonEncode({"messageType": "updateReceived", "ticket": ticketUpdate.id}));
-        notifyListeners();
+          int index = db.indexWhere((element) => element.id == ticketUpdate.id);
+          if (index != -1) {
+            db[index] = ticketUpdate;
+            await writeAllToDisk();
+          }
+          ws.sink.add(jsonEncode({"messageType": "updateReceived", "ticket": ticketUpdate.id}));
+          notifyListeners();
         }
       }
     }, onDone: () {
@@ -180,5 +181,45 @@ class DatabaseHolder extends ChangeNotifier {
       throw Exception("No connection to server, cannot download DB");
     }
     notifyListeners();
+  }
+
+  List<Locker> getLockers() {
+    //TODO trouver une manière de récupérer les vestiaires (sûrement les envoyer avec chaque sync)
+    Map<String, List<int>> totalPerLocker = {
+      "Sac": [for (int i = 0; i < 7; i++) 0],
+      "Vetement": [for (int i = 0; i < 7; i++) 0],
+      "Relou": [for (int i = 0; i < 7; i++) 0]
+    };
+    for (Ticket ticket in db) {
+      for (Cloth cloth in ticket.clothes) {
+        totalPerLocker[cloth.clothType]![cloth.idNumber]++;
+      }
+    }
+    List<Locker> returnValue = [];
+    int index = 0;
+    for (int i in totalPerLocker["Sac"]!) {
+      Locker locker = Locker(i + 1, remainingSpace: {}, totalSpace: {});
+      for (String type in ["Sac", "Vetement", "Relou"]) {
+        locker.remainingSpace[type] = totalPerLocker[type]![index];
+        locker.totalSpace[type] = totalPerLocker[type]![index];
+      }
+
+      returnValue.add(locker);
+      index++;
+    }
+    return returnValue;
+  }
+}
+
+class Locker {
+  int idNumber;
+  Map<String, int> remainingSpace;
+  Map<String, int> totalSpace;
+
+  Locker(this.idNumber, {required this.remainingSpace, required this.totalSpace});
+
+  @override
+  String toString() {
+    return "{idNumber: $idNumber, remainingSpace: $remainingSpace, totalSpace: $totalSpace}";
   }
 }

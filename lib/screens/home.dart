@@ -41,9 +41,13 @@ class _HomeState extends State<Home> {
         if (result.statusCode >= 200 && result.statusCode < 299) {
           List<bool>? availableLockers = await showLockerPopup(context, jsonDecode(result.body).map<String>((e)=>e.toString()).toList());
           if(availableLockers == null) return;
-          // todo: passer ça en param et le passer au moment de get l'id
-          // TODO: Rajouter compteur de place et c'est bon pour l'entrée
-          Navigator.pushNamed(context, "/scannerLocker");
+          List<int> allowedLockers = [];
+          for (int i = 0; i<availableLockers.length; i++){
+            if(availableLockers[i]) {
+              allowedLockers.add(i+1);
+            }
+          }
+          Navigator.pushNamed(context, "/scannerLocker", arguments: allowedLockers);
         } else {
           throw Exception("Bad response from server, cannot get lockers");
         }

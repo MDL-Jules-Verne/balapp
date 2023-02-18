@@ -60,7 +60,7 @@ class Ticket {
           "entered": 0,
           "leave": 0,
         };
-    clothes = (json["clothes"] ?? []).map<Cloth>((e)=>Cloth.fromJson(e)).toList();
+    clothes = (json["clothes"] ?? []).map<Cloth>((e) => Cloth.fromJson(e)).toList();
   }
 
   /// This is used in TicketWithIndex
@@ -79,22 +79,35 @@ class Ticket {
     timestamps = ticket.timestamps;
   }*/
 
-  Ticket({
-    required this.whoEntered,
-    required this.whoScanned,
-    required this.externe,
-    required this.id,
-    required this.couleur,
-    required this.prenom,
-    required this.nom,
-    required this.hasEntered,
-    required this.classe,
-    required this.niveau,
-    required this.salle,
-    required this.hasTakenFreeDrink,
-    required this.timestamps,
-    this.isNotSync
-  });
+  /// HARDCODED LOL
+  String clothesString() {
+    String returnString = "";
+    int nbOfBags = clothes.where((e) => e.clothType == "Sac").length;
+    int nbOfClothes = clothes.where((e) => e.clothType == "Vetement").length;
+    int nbOfRelou = clothes.where((e) => e.clothType == "Relou").length;
+
+    if (nbOfBags > 0) returnString += "Sacs: $nbOfBags, ";
+    if (nbOfClothes > 0) returnString += "V: $nbOfClothes, ";
+    if (nbOfRelou > 0) returnString += "R: $nbOfRelou, ";
+    if(returnString.isEmpty) returnString = "Aucun";
+    return returnString;
+  }
+
+  Ticket(
+      {required this.whoEntered,
+      required this.whoScanned,
+      required this.externe,
+      required this.id,
+      required this.couleur,
+      required this.prenom,
+      required this.nom,
+      required this.hasEntered,
+      required this.classe,
+      required this.niveau,
+      required this.salle,
+      required this.hasTakenFreeDrink,
+      required this.timestamps,
+      this.isNotSync});
 }
 
 /*
@@ -120,33 +133,34 @@ class TicketWithIndex extends Ticket {
       required this.index});
 }
 */
-class Cloth{
+class Cloth {
   late String clothType;
   late int idNumber;
   late int place;
+
   Cloth({required this.clothType, required this.idNumber, required this.place});
-  Cloth.fromJson(Map json){
-    if(json["clothType"] == null || json["idNumber"] == null || json["place"] == null){
+
+  Cloth.fromJson(Map json) {
+    if (json["clothType"] == null || json["idNumber"] == null || json["place"] == null) {
       throw Exception("Clothe is not parsable");
     }
     clothType = json["clothType"];
     idNumber = json["idNumber"];
     place = json["place"];
+  }
 
+  String toCode() {
+    return "${idNumber > 4 ? idNumber % 4 : idNumber}${clothType == "Relou" || (clothType == "Sac" && idNumber <= 3)? "R" : idNumber <= 4 ? "A" : "B"}${place < 10 ? "0" : ""}$place";
   }
-  String toCode(){
-    return "$idNumber${clothType == "Relou" ? "R" : idNumber<=4 ? "A" : "B"}${place<10 ? "0" : ""}$place";
+
+  Map toJson() {
+    return {"clothType": clothType, "idNumber": idNumber, "place": place};
   }
-  Map toJson(){
-    return {
-      "clothType": clothType,
-      "idNumber": idNumber,
-      "place": place
-    };
-  }
+
   @override
   String toString() {
     return "Cloth(${toJson()})";
   }
 }
+
 const String letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
