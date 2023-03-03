@@ -38,11 +38,11 @@ class _ConnectDialogState extends State<ConnectDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("Local connect"),
+      title: const Text("Connexion"),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text("Enter IP address of local server"),
+          const Text("Entrez l'addresse du serveur"),
           CustomTextInput(
             controller: controller,
             formatter: [FilteringTextInputFormatter.deny(" ")],

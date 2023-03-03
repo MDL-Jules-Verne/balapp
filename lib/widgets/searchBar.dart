@@ -42,8 +42,11 @@ class _SearchBarState extends State<SearchBar> {
 
   @override
   Widget build(BuildContext context) {
-
-    if (oldSearchBy != widget.searchBy || oldSearchText != widget.searchText || !listEquals(oldDbValue ,widget.db.db)) {
+    print(oldSearchText);
+    print(widget.searchText);
+    print(oldSearchBy);
+    print(widget.searchBy);
+    if (oldSearchBy != widget.searchBy || oldSearchText != widget.searchText /*|| !listEquals(oldDbValue ,widget.db.db)*/) {
       Timer.run(() {
         setState(() {
           oldSearchBy = widget.searchBy;
@@ -55,12 +58,33 @@ class _SearchBarState extends State<SearchBar> {
         });
         widget.updateSearch(searchAlgorithm(
             widget.controller.text == "" ? SearchBy.none : searchBy,
-            List<Ticket>.from(context.read<DatabaseHolder>().db),
+            List<Ticket>.from(context
+                .read<DatabaseHolder>()
+                .db),
             widget.controller.text,
             showUnregisteredTickets
         ));
       });
     }
+      if(!listEquals(oldDbValue ,widget.db.db)){
+        Timer.run(() {
+          setState(() {
+            /*oldSearchBy = widget.searchBy;*/
+            oldDbValue = List.from(widget.db.db);
+            /*oldSearchText = widget.searchText;
+            searchBy = widget.searchBy;
+            widget.controller.text = widget.searchText ?? "";*/
+            // showUnregisteredTickets = true;
+          });
+          widget.updateSearch(searchAlgorithm(
+              widget.controller.text == "" ? SearchBy.none : searchBy,
+              List<Ticket>.from(context.read<DatabaseHolder>().db),
+              widget.controller.text,
+              showUnregisteredTickets
+          ));
+        });
+      }
+
     return Column(
       children: [
         Row(

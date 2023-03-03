@@ -9,11 +9,11 @@ Widget nameDialog(BuildContext context, StateSetter? setState, SharedPreferences
     {bool isIntentional = false}) {
   TextEditingController controller = TextEditingController();
   return AlertDialog(
-    title: const Text("Enter a name"),
+    title: const Text("Entrez votre nom"),
     content: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text("We need your name to determine who scanned which ticket and avoid database conflicts"),
+        const Text("Est utilisé pour vérifier les connections"),
         CustomTextInput(controller: controller, label: ""),
       ],
     ),
@@ -27,7 +27,7 @@ Widget nameDialog(BuildContext context, StateSetter? setState, SharedPreferences
           },
         ),*/
       TextButton(
-        child: const Text("Confirm (can't be changed again)"),
+        child: const Text("Confirm"),
         onPressed: () {
           if(controller.text.isEmpty) return;
           prefs.setString("scannerName", controller.text);
