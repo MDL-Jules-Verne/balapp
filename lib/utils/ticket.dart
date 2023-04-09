@@ -2,11 +2,9 @@ class Ticket {
   late bool externe;
   late final String id;
   late String whoEntered;
-  late final String couleur;
   late String prenom;
   late String nom;
   late bool hasEntered;
-  late final String salle;
   late Map timestamps;
   late String whoScanned;
   late int classe;
@@ -23,8 +21,6 @@ class Ticket {
   Map toJson() {
     return {
       "id": id,
-      "salle": salle,
-      "couleur": couleur,
       "prenom": prenom,
       "nom": nom,
       "externe": externe,
@@ -46,12 +42,10 @@ class Ticket {
     isNotSync = json["isNotSync"];
     whoEntered = json["whoEntered"] ?? "";
     whoScanned = json["whoScanned"] ?? "";
-    couleur = json["couleur"];
     prenom = json["prenom"] ?? "";
     nom = json["nom"] ?? "";
     hasEntered = json["hasEntered"] ?? false;
-    salle = json["salle"];
-    classe = json["classe"];
+    classe = json["classe"] ?? 0;
     niveau = json["niveau"] ?? "";
     hasTakenFreeDrink = json["hasTakenFreeDrink"] ?? false;
     timestamps = json["timestamps"] ??
@@ -98,13 +92,11 @@ class Ticket {
       required this.whoScanned,
       required this.externe,
       required this.id,
-      required this.couleur,
       required this.prenom,
       required this.nom,
       required this.hasEntered,
       required this.classe,
       required this.niveau,
-      required this.salle,
       required this.hasTakenFreeDrink,
       required this.timestamps,
       this.isNotSync});
@@ -150,7 +142,7 @@ class Cloth {
   }
 
   String toCode() {
-    return "${idNumber > 4 ? idNumber % 4 : idNumber}${clothType == "Relou" || (clothType == "Sac" && idNumber <= 3)? "R" : idNumber <= 4 ? "A" : "B"}${place < 10 ? "0" : ""}$place";
+    return "$idNumber${clothType[0]}${place < 10 ? "0" : ""}$place";
   }
 
   Map toJson() {

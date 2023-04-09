@@ -243,49 +243,6 @@ class SalleId extends StatelessWidget {
   }
 }
 
-class ColorDisplay extends StatelessWidget {
-  const ColorDisplay(
-    this.ticket, {
-    Key? key,
-  }) : super(key: key);
-  final Ticket ticket;
-
-  @override
-  Widget build(BuildContext context) {
-    return Flexible(
-      flex: 0,
-      fit: FlexFit.loose,
-      child: Container(
-        margin: const EdgeInsets.only(left: 10),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 0),
-        width: 80,
-        // height: 32,
-
-        decoration: ShapeDecoration(
-          shape: SmoothRectangleBorder(
-            borderRadius: SmoothBorderRadius(
-              cornerRadius: 8,
-              cornerSmoothing: 1,
-            ),
-          ),
-          color: stringToColor[ticket.couleur],
-        ),
-        child: Center(
-          child: Text(
-            ticket.couleur.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class IntExtDisplay extends StatelessWidget {
   const IntExtDisplay(
     this.ticket, {
