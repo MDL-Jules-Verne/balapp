@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Widget lockerPopup(BuildContext context, List<String> lockers) {
+Widget lockerPopup(BuildContext context, List<Map> lockers, String? overrideTitle) {
   TextEditingController controller = TextEditingController();
-  List<bool> lockersCheck = [for (var i in lockers) false];
+  List<bool> lockersCheck = lockers.map((e) => e["checked"] as bool).toList();
   return StatefulBuilder(
     builder: (context, setState) {
       return AlertDialog(
-        title: const Text("Sélectionnez les vestiaires desservis"),
+        title: Text(overrideTitle ?? "Sélectionnez les vestiaires desservis"),
         content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -25,14 +25,14 @@ Widget lockerPopup(BuildContext context, List<String> lockers) {
                         });
                       },
                     ),
-                    Text(lockers[i])
+                    Text(lockers[i]["displayName"])
                   ],)
             ]
         ),
         actions: [
           TextButton(
             child: const Text("Finish"),
-            onPressed: lockersCheck.every((element) => !element) ? null : (){
+            onPressed: lockersCheck.every((element) => !element) && overrideTitle == null ? null : (){
               Navigator.pop(context, lockersCheck);
             },
           )
@@ -43,6 +43,6 @@ Widget lockerPopup(BuildContext context, List<String> lockers) {
   );
 }
 
-Future<List<bool>?> showLockerPopup(BuildContext context, List<String> lockers) async {
-  return await showDialog(context: context, builder: (context) => lockerPopup(context, lockers));
+Future<List<bool>?> showLockerPopup(BuildContext context, List<Map> lockers,[ String? overrideTitle]) async {
+  return await showDialog(context: context, builder: (context) => lockerPopup(context, lockers, overrideTitle));
 }

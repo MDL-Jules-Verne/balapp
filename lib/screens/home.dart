@@ -6,6 +6,7 @@ import 'package:balapp/consts.dart';
 import 'package:balapp/screens/search_vestiaires.dart';
 import 'package:balapp/screens/settings.dart';
 import 'package:balapp/utils/database_holder.dart';
+import 'package:balapp/utils/init_future.dart';
 import 'package:balapp/widgets/custom_icon_button.dart';
 import 'package:balapp/widgets/dialogs/lockersPopup.dart';
 import 'package:figma_squircle/figma_squircle.dart';
@@ -25,45 +26,52 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   late List<ButtonDetails> buttons;
   int selectedButton = 2;
+  late DatabaseHolder db;
 
   @override
   void initState() {
     super.initState();
+    db = context.read<DatabaseHolder>();
+    selectedButton = db.appMode == AppMode.bal ? 2 : 1;
     buttons = [
       ButtonDetails(
           onTap: () {
             Navigator.pushNamed(context, "/scanner");
           },
           icon: Icons.qr_code_scanner_rounded),
-      ButtonDetails(onTap: () async {
-        DatabaseHolder db = context.read<DatabaseHolder>();
-        Response result = await httpCall("/clothes/lockersList", HttpMethod.get, db.apiUrl!);
-        if (result.statusCode >= 200 && result.statusCode < 299) {
-          List<bool>? availableLockers = await showLockerPopup(context, jsonDecode(result.body).map<String>((e)=>e.toString()).toList());
-          if(availableLockers == null) return;
-          List<int> allowedLockers = [];
-          for (int i = 0; i<availableLockers.length; i++){
-            if(availableLockers[i]) {
-              allowedLockers.add(i+1);
-            }
-          }
-          Navigator.pushNamed(context, "/scannerLocker", arguments: allowedLockers);
-        } else {
-          throw Exception("Bad response from server, cannot get lockers");
-        }
-        // todo: offline mode
-      }, icon: Icons.checkroom),
+      if (db.appMode == AppMode.bal)
+        ButtonDetails(
+            onTap: () async {
+              DatabaseHolder db = context.read<DatabaseHolder>();
+              Response result = await httpCall("/clothes/lockersList", HttpMethod.get, db.apiUrl!);
+              if (result.statusCode >= 200 && result.statusCode < 299) {
+                List<bool>? availableLockers =
+                    await showLockerPopup(context, jsonDecode(result.body).map<Map>((e)=>e as Map).toList());
+                if (availableLockers == null) return;
+                List<int> allowedLockers = [];
+                for (int i = 0; i < availableLockers.length; i++) {
+                  if (availableLockers[i]) {
+                    allowedLockers.add(i + 1);
+                  }
+                }
+                Navigator.pushNamed(context, "/scannerLocker", arguments: allowedLockers);
+              } else {
+                throw Exception("Bad response from server, cannot get lockers");
+              }
+              // todo: offline mode
+            },
+            icon: Icons.checkroom),
       ButtonDetails(
           onTap: () {
             setState(() {
-              selectedButton = 2;
+              selectedButton = db.appMode == AppMode.bal ? 2 : 1;
             });
           },
           icon: Icons.home_outlined),
       ButtonDetails(
           onTap: () {
             setState(() {
-              selectedButton = 3;
+              selectedButton = db.appMode == AppMode.bal ? 3 : 2;
             });
           },
           icon: Icons.settings),
@@ -74,7 +82,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        selectedButton == 2 ? const SearchVestiaires() : const Settings(),
+         selectedButton == (db.appMode == AppMode.bal ? 2:1) ? const SearchVestiaires() : const Settings(),
         Positioned(
           bottom: 0,
           left: 0,

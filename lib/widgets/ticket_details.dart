@@ -189,7 +189,6 @@ class TicketDetailsBar extends StatelessWidget {
                         await httpCall("/freeDrink", HttpMethod.post, db.apiUrl as Uri,
                             body: jsonEncode({"id": ticket.id, "hasTakenFreeDrink": ticket.hasTakenFreeDrink}));
                       } else {
-                        print("test");
                         int i = db.db.indexWhere((element) => element.id == ticket.id);
                         db.editAndSaveTicket(ticket, i);
                       }

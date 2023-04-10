@@ -42,10 +42,6 @@ class _SearchBarState extends State<SearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    print(oldSearchText);
-    print(widget.searchText);
-    print(oldSearchBy);
-    print(widget.searchBy);
     if (oldSearchBy != widget.searchBy || oldSearchText != widget.searchText /*|| !listEquals(oldDbValue ,widget.db.db)*/) {
       Timer.run(() {
         setState(() {

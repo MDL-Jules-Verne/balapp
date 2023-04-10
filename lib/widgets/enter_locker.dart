@@ -12,6 +12,7 @@ import 'package:http/src/response.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
+import 'dialogs/lockersPopup.dart';
 import 'horizontal_line.dart';
 
 typedef StrToVoidFn = void Function(String?);
@@ -70,7 +71,6 @@ class _EnterLockerState extends State<EnterLocker> {
         "Relou": ticket!.clothes.where((e) => e.clothType == "Relou").toList()
       };
     }
-    print(clothMap);
     return ClipSmoothRect(
       radius: const SmoothBorderRadius.only(
         topLeft: SmoothRadius(
@@ -255,7 +255,6 @@ class _EnterLockerState extends State<EnterLocker> {
                                                   "clothType": type,
                                                 }));
                                         if (res.statusCode >= 200 && res.statusCode < 299) {
-                                          print(res.body);
                                           setState(() {
                                             ticket!.clothes.add(Cloth.fromJson(jsonDecode(res.body)));
                                             littleError = null;
@@ -271,12 +270,12 @@ class _EnterLockerState extends State<EnterLocker> {
                                       } else {
                                         List<Locker> max;
                                         List<Locker> lockers = widget.db.getLockers();
-                                        print(lockers);
                                         return;
                                         if (type == "Vetement") {
                                           max = lockers.where((e) => allowedLockers.contains(e.idNumber)).toList();
                                           if (max.isEmpty) {
-                                            max = lockers.where((e) => allowedLockers.contains(e.idNumber - 4)).toList();
+                                            max =
+                                                lockers.where((e) => allowedLockers.contains(e.idNumber - 4)).toList();
                                           }
                                         } else if (type == "Relou") {
                                           max = lockers.where((e) => allowedLockers.contains(e.idNumber)).toList();
@@ -312,35 +311,56 @@ class _EnterLockerState extends State<EnterLocker> {
                           ),
                         ),
                         Flexible(
-                          flex: 1,
                           fit: FlexFit.tight,
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: TextButton(
-                              onPressed: () {
-                                widget.dismiss();
-                              },
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
-                                alignment: Alignment.topCenter,
-                                textStyle:
-                                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, fontFamily: "Inter"),
-                                foregroundColor: kBlack,
+                          flex: 1,
+                          child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+                            for (List i in [
+                              ["Done", Icons.check, () => widget.dismiss()],
+                              [
+                                "Edit open zones",
+                                Icons.edit,
+                                () async {
+                                  DatabaseHolder db = context.read<DatabaseHolder>();
+                                  Response result =
+                                      await httpCall("/clothes/lockersListFull", HttpMethod.get, db.apiUrl!);
+                                  if (result.statusCode >= 200 && result.statusCode < 299) {
+                                    List<bool>? selectedLockers = await showLockerPopup(
+                                        context,
+                                        jsonDecode(result.body).map<Map>((e) => e as Map).toList(),
+                                        "Sélectionner les vestiaires ouverts:");
+                                    Response status = await httpCall(
+                                        "/clothes/editLockers", HttpMethod.post, db.apiUrl!,
+                                        body: jsonEncode(selectedLockers));
+                                  } else {
+                                    throw Exception("Bad response from server, cannot get lockers");
+                                  }
+                                }
+                              ]
+                            ])
+                              TextButton(
+                                onPressed: i[2],
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
+                                  alignment: Alignment.topCenter,
+                                  textStyle:
+                                      const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, fontFamily: "Inter"),
+                                  foregroundColor: kBlack,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    Icon(
+                                      i[1],
+                                    ),
+                                    const SizedBox(
+                                      width: 5,
+                                    ),
+                                    Text(i[0]),
+                                  ],
+                                ),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Icon(
-                                    Icons.check,
-                                  ),
-                                  SizedBox(
-                                    width: 5,
-                                  ),
-                                  Text("DONE"),
-                                ],
-                              ),
-                            ),
-                          ),
+                          ]),
                         )
                       ],
                     ),
@@ -390,15 +410,15 @@ class MiniCloth extends StatelessWidget {
                         }));
                     if (res.statusCode >= 200 && res.statusCode < 299) {
                       int index = ticket.clothes.indexWhere((e) =>
-                      e.idNumber == cloth.idNumber && e.clothType == cloth.clothType && e.place == cloth.place);
+                          e.idNumber == cloth.idNumber && e.clothType == cloth.clothType && e.place == cloth.place);
                       removeCloth(index);
                       setLittleError(null);
                     } else {
                       setLittleError(res.body);
                     }
-                  }else {
+                  } else {
                     int index = ticket.clothes.indexWhere((e) =>
-                    e.idNumber == cloth.idNumber && e.clothType == cloth.clothType && e.place == cloth.place);
+                        e.idNumber == cloth.idNumber && e.clothType == cloth.clothType && e.place == cloth.place);
                     removeCloth(index);
                     int i = db.db.indexWhere((element) => element.id == ticket.id);
                     db.editAndSaveTicket(ticket, i);

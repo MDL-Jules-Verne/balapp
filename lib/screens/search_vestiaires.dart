@@ -91,7 +91,6 @@ class _SearchVestiairesState extends State<SearchVestiaires> {
                         onChanged: (bool? value) {
                           setState(() {
                             isDrinks = value!;
-                            print(isDrinks);
                           });
                         },
                       ),
