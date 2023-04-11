@@ -2,6 +2,15 @@
 Ce repo est la partie front de l'appliction Balapp.
 Pour utiliser l'application, voir [la partie backend](https://github.com/MDL-Jules-Verne/balapp-api)
 
+## Données techniques
+Réalisé avec Flutter en Dart.  
+Technos utilisées :
+* Websockets
+* Requêtes HTTP
+* Stockage persistant ("base de données" locale)
+* Responsive
+* State management ave Provider
+
 ## Explication de l'application
 ### Démarrage
 Au lancement, il est demandé de renseigner un nom. Il est utilisé pour séparer les applications dans le dashboard.
@@ -30,10 +39,12 @@ Ensuite l'ip d'un serveur est demandée. [Voir la partie backend](https://github
    
  <img src="https://github.com/MDL-Jules-Verne/balapp/blob/new/READMEpics/Vestiaires.jpg?raw=true" alt= “” width="162" height="351">
  
-* Vestiaires : Accessible en mode bal avec l'icone de cintre. Commencer par scanner un ticket. Ajouter ensuite en fonction des objets apportés. La suite alphanumérique qui appraraît est l'ID du vêtement, nous conseillons de l'écrire sur un scotch ou une étiquette s'accrochant sur l'objet. 
+* Vestiaires : Accessible en mode bal avec l'icône de cintre. Commencer par scanner un ticket. Ajouter ensuite en fonction des objets apportés. La suite alphanumérique qui appraraît est l'ID du vêtement, nous conseillons de l'écrire sur un scotch ou une étiquette s'accrochant sur l'objet. 
     * Le premier chiffre est l'ID de la zone
     * La lettre qui suit est le type d'objet
     * Les deux chiffres suivants sont le numéro de l'objet
 * Quand une zone est pleine, cliquer sur EDIT OPEN ZONES et décocher la zone en question, l'application arrêtera d'envoyer des vêtements dans les zones décochées
 
-###
+### Enfin
+Vous avez toutes les informations nécessaires pour organiser votre bal !  
+Pour la partie serveur, voir [la partie backend](https://github.com/MDL-Jules-Verne/balapp-api)
