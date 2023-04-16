@@ -91,11 +91,7 @@ class TicketDetailsMedium extends StatelessWidget {
 class TicketDetailsExtended extends StatelessWidget {
   final Ticket ticket;
 
-  const TicketDetailsExtended(
-    this.ticket, {
-    Key? key,
-  }) : super(key: key);
-
+  const TicketDetailsExtended(this.ticket, {Key? key,}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -104,22 +100,16 @@ class TicketDetailsExtended extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             IntExtDisplay(ticket),
-            SizedBox(
-              width: 6.w,
-            ),
+            SizedBox(width: 6.w,),
             NomPrenomDisplay(ticket),
-            SizedBox(
-              width: 4.h,
-            ),
+            SizedBox(width: 4.h,),
             Text(
               ticket.niveau.isEmpty ? "" : ticket.niveau + ticket.classe.toString(),
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
             )
           ],
         ),
-        const SizedBox(
-          height: 10,
-        ),
+        const SizedBox(height: 10,),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
