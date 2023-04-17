@@ -9,7 +9,7 @@ Technos utilisées :
 * Requêtes HTTP
 * Stockage persistant ("base de données" locale)
 * Responsive
-* State management ave Provider
+* State management avec Provider
 
 ## Explication de l'application
 ### Démarrage
